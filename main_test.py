@@ -74,8 +74,8 @@ def run_simulation() -> bool:
         WaveConfig(
             enemy_count=3,
             spawn_interval=1.0,
-            base_hp=240.0,        # Allows enemy to reach nest (x=650), then die to towers on return path
-            base_speed=115.0,     # Reaches nest at ~5.2s, reverses path, dies on return at ~7.0s
+            base_hp=40.0,         # Reduced-damage balance: keeps the thief run in range of the tower trio while still validating theft/kill/drop behavior
+            base_speed=120.0,      # Reaches nest quickly enough to steal and loop back under the reduced damage curve
             gold_reward=50,
             enemy_name="Swift Thief"
         )

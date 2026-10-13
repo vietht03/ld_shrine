@@ -376,10 +376,17 @@ class GameplayView(arcade.View):
             arcade.draw_text(lbl, tx-7, ty-8, (20,20,20), 13, bold=True)
 
             # Level badge
-            lvl_colors = [(200,180,30), (100,180,255), (255,80,80)]
-            lc = lvl_colors[tower.level-1]
-            arcade.draw_circle_filled(tx+15, ty+15, 9, lc)
-            arcade.draw_text(str(tower.level), tx+11, ty+9, (20,20,20), 9, bold=True)
+            lvl_colors = [
+                (200, 180, 30),
+                (100, 180, 255),
+                (255, 80, 80),
+                (180, 110, 255),
+                (100, 220, 120),
+                (255, 165, 80),
+            ]
+            lc = lvl_colors[min(tower.level - 1, len(lvl_colors) - 1)]
+            arcade.draw_circle_filled(tx + 15, ty + 15, 9, lc)
+            arcade.draw_text(str(tower.level), tx + 11, ty + 9, (20, 20, 20), 9, bold=True)
 
             # Lv3 special ability indicator
             if tower.level == 3:

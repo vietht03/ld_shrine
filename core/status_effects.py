@@ -95,7 +95,7 @@ class StatusEffectManager:
 
         return total_dot_damage
 
-    def get_speed_multiplier(self) -> float:
+    def get_speed_multiplier(self, slow_resistance: float = 0.0) -> float:
         """
         Calculates current speed multiplier based on active Freeze and Slow effects.
         """
@@ -104,7 +104,8 @@ class StatusEffectManager:
 
         slow_effect = self.effects.get(EffectType.SLOW)
         if slow_effect:
-            return max(0.0, 1.0 - slow_effect.slow_factor)
+            adjusted_slow = slow_effect.slow_factor * max(0.0, 1.0 - slow_resistance)
+            return max(0.0, 1.0 - adjusted_slow)
 
         return 1.0
 

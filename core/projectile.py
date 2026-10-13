@@ -27,7 +27,13 @@ class Projectile:
         dot_interval: float = 0.5,
         dot_duration: float = 0.0,
         stun_chance: float = 0.0,
-        stun_duration: float = 0.0
+        stun_duration: float = 0.0,
+        critical_chance: float = 0.0,
+        critical_multiplier: float = 2.0,
+        freeze_chance: float = 0.0,
+        freeze_duration: float = 0.0,
+        armor_reduction: float = 0.0,
+        knockback_chance: float = 0.0
     ) -> None:
         self.pos = Vec2(start_pos.x, start_pos.y)
         self.target_enemy = target_enemy
@@ -43,6 +49,12 @@ class Projectile:
         self.dot_duration = dot_duration
         self.stun_chance = stun_chance
         self.stun_duration = stun_duration
+        self.critical_chance = critical_chance
+        self.critical_multiplier = critical_multiplier
+        self.freeze_chance = freeze_chance
+        self.freeze_duration = freeze_duration
+        self.armor_reduction = armor_reduction
+        self.knockback_chance = knockback_chance
         self.has_hit: bool = False
 
     def update(self, dt: float, enemies: List[Enemy]) -> bool:
@@ -68,32 +80,59 @@ class Projectile:
 
     def _on_impact(self, enemies: List[Enemy]) -> None:
         if self.aoe_radius > 0.0:
-            for enemy in enemies:
-                if enemy.is_alive and enemy.pos.distance_to(self.pos) <= self.aoe_radius:
-                    self._apply_payload(enemy)
+            impacted = [
+                enemy for enemy in enemies
+                if enemy.is_alive and enemy.pos.distance_to(self.pos) <= self.aoe_radius
+            ]
+            if self.target_enemy and self.target_enemy.is_alive and self.target_enemy in impacted:
+                self._apply_payload(self.target_enemy, is_primary=True)
+            for enemy in impacted:
+                if enemy is not self.target_enemy:
+                    self._apply_payload(enemy, is_primary=False)
         else:
             if self.target_enemy and self.target_enemy.is_alive:
-                self._apply_payload(self.target_enemy)
+                self._apply_payload(self.target_enemy, is_primary=True)
 
-    def _apply_payload(self, enemy: Enemy) -> None:
-        enemy.take_damage(self.damage)
+    def _calculate_damage(self, base_damage: float, is_primary: bool) -> float:
+        damage = base_damage
+        if self.effect_type == "fire" and self.critical_chance > 0 and random.random() < self.critical_chance:
+            damage *= self.critical_multiplier
+        if self.aoe_radius > 0.0 and not is_primary:
+            damage *= 0.8
+        return damage
+
+    def _resolve_dot_damage(self, enemy: Enemy) -> float:
+        if self.dot_damage <= 0:
+            return 0.0
+        if self.dot_damage < 1.0:
+            return enemy.max_hp * self.dot_damage
+        return self.dot_damage
+
+    def _apply_payload(self, enemy: Enemy, is_primary: bool = True) -> None:
+        if self.aoe_radius <= 0 and enemy.evasion_chance > 0 and random.random() < enemy.evasion_chance:
+            return
+
+        enemy.take_damage(self._calculate_damage(self.damage, is_primary))
 
         if self.effect_type in ("ice", "freeze"):
             if self.effect_type == "freeze":
-                enemy.status_manager.apply_freeze(self.slow_duration)
+                if self.freeze_chance > 0 and random.random() < self.freeze_chance and not enemy.immune_to_freeze:
+                    enemy.status_manager.apply_freeze(self.freeze_duration or self.slow_duration)
             elif self.slow_factor > 0:
                 enemy.status_manager.apply_slow(self.slow_factor, self.slow_duration)
 
         elif self.effect_type == "poison":
             if self.dot_damage > 0:
-                enemy.status_manager.apply_dot(self.dot_damage, self.dot_interval, self.dot_duration)
-            # Stun check
-            if self.stun_chance > 0 and random.random() < self.stun_chance:
+                enemy.status_manager.apply_dot(self._resolve_dot_damage(enemy), self.dot_interval, self.dot_duration)
+            if self.armor_reduction > 0:
+                enemy.armor = min(0.85, getattr(enemy, "armor", 0.0) + self.armor_reduction)
+            if self.stun_chance > 0 and random.random() < self.stun_chance and not enemy.immune_to_freeze:
                 enemy.status_manager.apply_freeze(self.stun_duration)
+            if self.knockback_chance > 0 and random.random() < self.knockback_chance and not enemy.immune_to_knockback and hasattr(enemy, "follower"):
+                enemy.follower.reverse_path()
 
         elif self.effect_type == "fire":
-            # Burn DoT (Lv3 Fire Dragon)
             if self.dot_damage > 0:
-                enemy.status_manager.apply_dot(self.dot_damage, self.dot_interval, self.dot_duration)
+                enemy.status_manager.apply_dot(self._resolve_dot_damage(enemy), self.dot_interval, self.dot_duration)
 
         # Spell types handled the same way via aoe_radius

@@ -72,9 +72,11 @@ class DroppedEgg:
     """Represents an egg dropped by an enemy upon death."""
     pos: Vec2
     start_pos: Vec2 = field(default_factory=lambda: Vec2(0, 0))
-    timer: float = 3.0   # Respawn timer in seconds
-    initial_timer: float = 3.0
+    timer: float = 5.0   # Respawn timer in seconds
+    initial_timer: float = 5.0
     is_returned: bool = False
+    intercept_radius: float = 18.0
+    intercept_delay: float = 0.0
 
     def get_interpolated_pos(self, nest_pos: Vec2) -> Vec2:
         """Returns visual interpolated position from death location back to Dragon Nest."""
@@ -100,21 +102,91 @@ class Enemy:
         waypoints: List[Vec2],
         hp: float,
         base_speed: float,
-        gold_reward: int
+        gold_reward: int,
+        enemy_type: str = "footman"
     ) -> None:
         self.id = enemy_id
         self.name = name
         self.pos = start_pos
         self.max_hp = hp
         self.hp = hp
+        self.armor = 0.0
+        self.evasion_chance = 0.0
         self.base_speed = base_speed
         self.gold_reward = gold_reward
         self.has_egg: bool = False
         self.is_alive: bool = True
         self.has_escaped: bool = False
+        self.enemy_type = enemy_type
+        self.swarm = False
+        self.steal_delay = 1.0
+        self.steal_count = 1
+        self.immune_to_freeze = False
+        self.immune_to_knockback = False
+        self.slow_resist = 0.0
+        self.aura_shield = 0.0
+        self.heal_per_second = 0.0
+        self.silence_chance = 0.0
+        self._apply_enemy_profile()
 
-        self.follower = WaypointFollower(waypoints, base_speed)
+        self.follower = WaypointFollower(waypoints, self.base_speed)
         self.status_manager = StatusEffectManager()
+
+    def _apply_enemy_profile(self) -> None:
+        profiles = {
+            "peasant": {
+                "base_speed_mult": 1.0,
+                "armor": 0.0,
+                "swarm": True,
+                "steal_count": 1,
+                "steal_delay": 1.0,
+            },
+            "thief": {
+                "base_speed_mult": 1.9,
+                "armor": 0.0,
+                "evasion_chance": 0.15,
+                "steal_delay": 0.5,
+            },
+            "footman": {
+                "base_speed_mult": 1.0,
+                "armor": 0.10,
+            },
+            "knight": {
+                "base_speed_mult": 0.6,
+                "armor": 0.40,
+                "slow_resist": 0.30,
+            },
+            "mage": {
+                "base_speed_mult": 0.8,
+                "armor": 0.20,
+                "aura_shield": 0.20,
+                "heal_per_second": 0.02,
+                "silence_chance": 0.25,
+            },
+            "boss": {
+                "base_speed_mult": 0.5,
+                "armor": 0.20,
+                "immune_to_freeze": True,
+                "immune_to_knockback": True,
+                "steal_count": 3,
+                "steal_delay": 0.5,
+                "swarm": False,
+            },
+        }
+
+        profile = profiles.get(self.enemy_type, profiles["footman"])
+        self.base_speed *= profile.get("base_speed_mult", 1.0)
+        self.armor = profile.get("armor", self.armor)
+        self.evasion_chance = profile.get("evasion_chance", self.evasion_chance)
+        self.swarm = profile.get("swarm", self.swarm)
+        self.steal_delay = profile.get("steal_delay", self.steal_delay)
+        self.steal_count = profile.get("steal_count", self.steal_count)
+        self.immune_to_freeze = profile.get("immune_to_freeze", self.immune_to_freeze)
+        self.immune_to_knockback = profile.get("immune_to_knockback", self.immune_to_knockback)
+        self.slow_resist = profile.get("slow_resist", self.slow_resist)
+        self.aura_shield = profile.get("aura_shield", self.aura_shield)
+        self.heal_per_second = profile.get("heal_per_second", self.heal_per_second)
+        self.silence_chance = profile.get("silence_chance", self.silence_chance)
 
     def update(self, dt: float, nest_eggs_count: int) -> tuple[bool, bool]:
         """
@@ -131,8 +203,13 @@ class Enemy:
             if not self.is_alive:
                 return False, False
 
+        if self.heal_per_second > 0 and self.hp < self.max_hp:
+            self.hp = min(self.max_hp, self.hp + self.max_hp * self.heal_per_second * dt)
+
         # 2. Calculate movement based on status multipliers
-        speed_mult = self.status_manager.get_speed_multiplier()
+        speed_mult = self.status_manager.get_speed_multiplier(self.slow_resist)
+        if self.has_egg and self.enemy_type == "thief":
+            speed_mult *= 1.10
         effective_speed = self.base_speed * speed_mult
 
         # 3. Update waypoint position
@@ -159,11 +236,14 @@ class Enemy:
 
     def take_damage(self, damage: float) -> None:
         """Inflicts damage on enemy and updates alive status."""
-        self.hp -= damage
+        mitigated_damage = max(0.0, damage * (1.0 - min(self.armor, 0.85)))
+        if self.aura_shield > 0:
+            mitigated_damage *= (1.0 - self.aura_shield)
+        self.hp -= mitigated_damage
         if self.hp <= 0:
             self.hp = 0.0
             self.is_alive = False
 
     @property
     def speed(self) -> float:
-        return self.base_speed * self.status_manager.get_speed_multiplier()
+        return self.base_speed * self.status_manager.get_speed_multiplier(self.slow_resist)

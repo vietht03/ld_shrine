@@ -73,6 +73,20 @@ class WaveSpawner:
         hp_scaling = 1.15 ** self.current_wave_index
         scaled_hp = config.base_hp * hp_scaling
 
+        enemy_name = config.enemy_name.lower()
+        if "thief" in enemy_name or "rogue" in enemy_name:
+            enemy_type = "thief"
+        elif "knight" in enemy_name or "armored" in enemy_name:
+            enemy_type = "knight"
+        elif "mage" in enemy_name or "priest" in enemy_name or "wizard" in enemy_name:
+            enemy_type = "mage"
+        elif "boss" in enemy_name or "king" in enemy_name:
+            enemy_type = "boss"
+        elif "peasant" in enemy_name or "peasant" in enemy_name:
+            enemy_type = "peasant"
+        else:
+            enemy_type = "footman"
+
         enemy = Enemy(
             enemy_id=self.total_enemies_spawned,
             name=f"{config.enemy_name} #{self.total_enemies_spawned}",
@@ -80,7 +94,8 @@ class WaveSpawner:
             waypoints=waypoints,
             hp=scaled_hp,
             base_speed=config.base_speed,
-            gold_reward=config.gold_reward
+            gold_reward=config.gold_reward,
+            enemy_type=enemy_type
         )
 
         # Check if wave spawning completed

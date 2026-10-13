@@ -42,8 +42,8 @@ class GameManager:
         self,
         waypoints: List[Vec2],
         starting_eggs: int = 5,
-        starting_gold: int = 400,
-        starting_ruby: int = 0,
+        starting_gold: int = 500,
+        starting_ruby: int = 5,
         logger: Optional[Callable[[str], None]] = None
     ) -> None:
         self.waypoints = waypoints
@@ -83,9 +83,16 @@ class GameManager:
 
         # Default wave setup
         default_waves = [
-            WaveConfig(enemy_count=4,  spawn_interval=1.5, base_hp=70.0,  base_speed=42.0, gold_reward=30, enemy_name="Scout Goblin"),
-            WaveConfig(enemy_count=6,  spawn_interval=1.2, base_hp=110.0, base_speed=48.0, gold_reward=40, enemy_name="Armored Thief"),
-            WaveConfig(enemy_count=8,  spawn_interval=1.0, base_hp=160.0, base_speed=55.0, gold_reward=50, enemy_name="Dragon Raider"),
+            WaveConfig(enemy_count=3, spawn_interval=1.8, base_hp=70.0, base_speed=42.0, gold_reward=30, enemy_name="Peasant"),
+            WaveConfig(enemy_count=4, spawn_interval=1.6, base_hp=90.0, base_speed=55.0, gold_reward=35, enemy_name="Thief"),
+            WaveConfig(enemy_count=5, spawn_interval=1.4, base_hp=120.0, base_speed=52.0, gold_reward=40, enemy_name="Footman"),
+            WaveConfig(enemy_count=5, spawn_interval=1.3, base_hp=140.0, base_speed=58.0, gold_reward=45, enemy_name="Thief"),
+            WaveConfig(enemy_count=6, spawn_interval=1.2, base_hp=170.0, base_speed=60.0, gold_reward=50, enemy_name="Footman"),
+            WaveConfig(enemy_count=5, spawn_interval=1.1, base_hp=220.0, base_speed=66.0, gold_reward=55, enemy_name="Armored Knight"),
+            WaveConfig(enemy_count=6, spawn_interval=1.0, base_hp=260.0, base_speed=68.0, gold_reward=60, enemy_name="Mage"),
+            WaveConfig(enemy_count=6, spawn_interval=0.9, base_hp=310.0, base_speed=72.0, gold_reward=70, enemy_name="Thief"),
+            WaveConfig(enemy_count=5, spawn_interval=0.8, base_hp=420.0, base_speed=74.0, gold_reward=85, enemy_name="Armored Knight"),
+            WaveConfig(enemy_count=1, spawn_interval=1.0, base_hp=12000.0, base_speed=40.0, gold_reward=200, enemy_name="Boss"),
         ]
         self.wave_spawner = WaveSpawner(default_waves, inter_wave_delay=3.0)
         self.wave_spawner.start()
@@ -170,6 +177,24 @@ class GameManager:
     # ------------------------------------------------------------------
     # Spells
     # ------------------------------------------------------------------
+    def _intercept_dropped_egg(self, enemy: Enemy) -> bool:
+        """If a non-carrier enemy reaches a dropped egg, it can snatch it and flee."""
+        if enemy.has_egg or not enemy.is_alive:
+            return False
+
+        for egg in self.dropped_eggs[:]:
+            if egg.is_returned:
+                continue
+            if egg.initial_timer - egg.timer < egg.intercept_delay:
+                continue
+            if enemy.pos.distance_to(egg.pos) <= egg.intercept_radius:
+                enemy.has_egg = True
+                enemy.follower.reverse_path()
+                self.dropped_eggs.remove(egg)
+                self.log(f"EGG INTERCEPTED by {enemy.name} at ({egg.pos.x:.0f},{egg.pos.y:.0f})")
+                return True
+        return False
+
     def cast_fireball(self, target_pos: Vec2) -> bool:
         """
         Fireball: Cost 35 Mana. Launch AoE fire projectile at target_pos.
@@ -236,6 +261,7 @@ class GameManager:
         new_enemy = self.wave_spawner.update(dt, self.waypoints)
         if new_enemy:
             self.enemies.append(new_enemy)
+            self.log(f"SPAWNED {new_enemy.name} | HP {new_enemy.max_hp:.0f} | Speed {new_enemy.base_speed:.1f} | Type {new_enemy.enemy_type}")
 
         # 3. Update spell visual effects
         for eff in self.spell_effects[:]:
@@ -248,10 +274,14 @@ class GameManager:
             if not enemy.is_alive:
                 continue
 
+            self._intercept_dropped_egg(enemy)
+
             stole_egg, escaped = enemy.update(dt, self.nest_eggs)
 
             if stole_egg:
-                self.nest_eggs -= 1
+                stolen_amount = max(1, min(enemy.steal_count, self.nest_eggs))
+                self.nest_eggs -= stolen_amount
+                self.log(f"EGG STOLEN by {enemy.name} | {stolen_amount} egg(s) taken")
 
             if escaped:
                 self.player_eggs -= 1
@@ -264,6 +294,7 @@ class GameManager:
             if not enemy.is_alive and not enemy.has_escaped:
                 self.gold += enemy.gold_reward
                 self.score += enemy.gold_reward * 10
+                self.log(f"ENEMY SLAIN: {enemy.name} | +{enemy.gold_reward} gold")
 
                 # Ruby drop: 20% chance per kill
                 import random
@@ -275,8 +306,17 @@ class GameManager:
                 self.add_mana(8.0)
 
                 if enemy.has_egg:
-                    dropped = DroppedEgg(pos=enemy.pos, start_pos=enemy.pos, timer=3.0, initial_timer=3.0)
+                    import random
+                    delay = random.uniform(5.0, 7.0)
+                    dropped = DroppedEgg(
+                        pos=enemy.pos,
+                        start_pos=enemy.pos,
+                        timer=delay,
+                        initial_timer=delay,
+                        intercept_delay=1.0,
+                    )
                     self.dropped_eggs.append(dropped)
+                    self.log(f"EGG DROPPED by {enemy.name} at ({enemy.pos.x:.0f},{enemy.pos.y:.0f}) | Timer {delay:.1f}s")
 
                 self.enemies.remove(enemy)
 
@@ -288,18 +328,32 @@ class GameManager:
                     egg.is_returned = True
                     self.nest_eggs += 1
                     self.dropped_eggs.remove(egg)
+                    self.log("EGG RETURNED to Dragon Nest")
 
         # 7. Update towers & fire projectiles
         for tower in self.towers:
             projectile = tower.update(dt, self.enemies)
             if projectile:
                 self.projectiles.append(projectile)
+                self.log(f"TOWER FIRED {tower.name} Lv{tower.level} at {tower.target_enemy.name if tower.target_enemy else 'target'}")
 
         # 8. Update projectiles
         for proj in self.projectiles[:]:
             hit = proj.update(dt, self.enemies)
             if hit:
+                if proj.effect_type in {"ice", "freeze", "poison", "fire"}:
+                    self.log(f"STATUS EFFECT {proj.effect_type.upper()} applied")
                 self.projectiles.remove(proj)
+
+        # 9. Mage silence effects
+        for enemy in self.enemies:
+            if enemy.is_alive and enemy.enemy_type == "mage" and enemy.silence_chance > 0 and enemy.silence_chance >= 0.25:
+                for tower in self.towers:
+                    if tower.silence_timer <= 0 and tower.pos.distance_to(enemy.pos) <= 180.0:
+                        if 0.15 > 0:
+                            tower.silence_timer = 2.5
+                            self.log(f"MAGE SILENCED {tower.name} for 2.5s")
+                            break
 
         # 9. Victory check
         if self.wave_spawner.is_finished and len(self.enemies) == 0 and self.player_eggs > 0:
