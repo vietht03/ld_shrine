@@ -1,9 +1,11 @@
 {
-  "unlocked_level": 2,
+  "unlocked_level": 3,
   "completed_levels": [
-    1
+    1,
+    2
   ],
   "high_scores": {
-    "1": 3700
+    "1": 3700,
+    "2": 6100
   }
 }

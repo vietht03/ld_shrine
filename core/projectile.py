@@ -1,14 +1,16 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional
+import random
 from core.vec2 import Vec2
 from core.enemy import Enemy
 
 
 class Projectile:
     """
-    Represents a projectile in flight released by a Dragon Tower.
-    Handles movement, collision detection, AoE damage, and status effect payload delivery.
+    Projectile fired by a Dragon Tower.
+    Supports: fire (AoE + optional burn DoT), ice (slow), freeze (full stop),
+    poison (DoT + stun chance), fireball spell (AoE), frost spell (area freeze).
     """
 
     def __init__(
@@ -23,11 +25,13 @@ class Projectile:
         slow_duration: float = 0.0,
         dot_damage: float = 0.0,
         dot_interval: float = 0.5,
-        dot_duration: float = 0.0
+        dot_duration: float = 0.0,
+        stun_chance: float = 0.0,
+        stun_duration: float = 0.0
     ) -> None:
-        self.pos = start_pos
+        self.pos = Vec2(start_pos.x, start_pos.y)
         self.target_enemy = target_enemy
-        self.target_pos = target_enemy.pos
+        self.target_pos = Vec2(target_enemy.pos.x, target_enemy.pos.y)
         self.speed = speed
         self.damage = damage
         self.effect_type = effect_type
@@ -37,17 +41,15 @@ class Projectile:
         self.dot_damage = dot_damage
         self.dot_interval = dot_interval
         self.dot_duration = dot_duration
+        self.stun_chance = stun_chance
+        self.stun_duration = stun_duration
         self.has_hit: bool = False
 
     def update(self, dt: float, enemies: List[Enemy]) -> bool:
-        """
-        Moves projectile toward target. Upon hit, applies damage and effects.
-        Returns True if projectile hit target/destination.
-        """
         if self.has_hit:
             return True
 
-        # Update target_pos if enemy is alive
+        # Track target if alive
         if self.target_enemy and self.target_enemy.is_alive:
             self.target_pos = self.target_enemy.pos
 
@@ -65,22 +67,33 @@ class Projectile:
             return False
 
     def _on_impact(self, enemies: List[Enemy]) -> None:
-        """Applies damage and status effects to enemy or area."""
         if self.aoe_radius > 0.0:
-            # Area of Effect impact
             for enemy in enemies:
                 if enemy.is_alive and enemy.pos.distance_to(self.pos) <= self.aoe_radius:
                     self._apply_payload(enemy)
         else:
-            # Single-target impact
             if self.target_enemy and self.target_enemy.is_alive:
                 self._apply_payload(self.target_enemy)
 
     def _apply_payload(self, enemy: Enemy) -> None:
-        """Inflicts base damage and attaches status effects to target enemy."""
         enemy.take_damage(self.damage)
 
-        if self.effect_type == "ice" and self.slow_factor > 0:
-            enemy.status_manager.apply_slow(self.slow_factor, self.slow_duration)
-        elif self.effect_type == "poison" and self.dot_damage > 0:
-            enemy.status_manager.apply_dot(self.dot_damage, self.dot_interval, self.dot_duration)
+        if self.effect_type in ("ice", "freeze"):
+            if self.effect_type == "freeze":
+                enemy.status_manager.apply_freeze(self.slow_duration)
+            elif self.slow_factor > 0:
+                enemy.status_manager.apply_slow(self.slow_factor, self.slow_duration)
+
+        elif self.effect_type == "poison":
+            if self.dot_damage > 0:
+                enemy.status_manager.apply_dot(self.dot_damage, self.dot_interval, self.dot_duration)
+            # Stun check
+            if self.stun_chance > 0 and random.random() < self.stun_chance:
+                enemy.status_manager.apply_freeze(self.stun_duration)
+
+        elif self.effect_type == "fire":
+            # Burn DoT (Lv3 Fire Dragon)
+            if self.dot_damage > 0:
+                enemy.status_manager.apply_dot(self.dot_damage, self.dot_interval, self.dot_duration)
+
+        # Spell types handled the same way via aoe_radius
