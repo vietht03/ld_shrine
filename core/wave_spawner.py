@@ -69,9 +69,9 @@ class WaveSpawner:
         self.enemies_spawned_in_wave += 1
         self.total_enemies_spawned += 1
 
-        # Scale HP based on wave index (15% per wave)
+        # Scale HP based on wave index (15% per wave), with a higher base HP floor to match the slower, longer survival gameplay loop.
         hp_scaling = 1.15 ** self.current_wave_index
-        scaled_hp = config.base_hp * hp_scaling
+        scaled_hp = config.base_hp * hp_scaling * 2.0
 
         enemy_name = config.enemy_name.lower()
         if "thief" in enemy_name or "rogue" in enemy_name:

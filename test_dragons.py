@@ -19,6 +19,20 @@ def test_game_start_and_dropped_egg_intercept_rules():
     assert len(game.dropped_eggs) == 0
 
 
+def test_fire_dragon_360_aura_around_tower():
+    dragon = FireDragon(1, Vec2(300, 300))
+    for _ in range(2):
+        dragon.upgrade()
+
+    target = Enemy(1, "Target", Vec2(500, 300), [Vec2(0, 300), Vec2(600, 300)], 100.0, 50.0, 10, enemy_type="footman")
+    nearby = Enemy(2, "Nearby", Vec2(300, 350), [Vec2(0, 300), Vec2(600, 300)], 100.0, 50.0, 10, enemy_type="footman")
+
+    projectile = dragon.fire(target)
+    projectile.update(1.0, [target, nearby])
+
+    assert nearby.hp < 100.0
+
+
 def test_fire_dragon_matches_requested_balance():
     dragon = FireDragon(1, Vec2(0, 0))
 

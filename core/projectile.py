@@ -35,6 +35,7 @@ class Projectile:
         armor_reduction: float = 0.0,
         knockback_chance: float = 0.0
     ) -> None:
+        self.start_pos = Vec2(start_pos.x, start_pos.y)
         self.pos = Vec2(start_pos.x, start_pos.y)
         self.target_enemy = target_enemy
         self.target_pos = Vec2(target_enemy.pos.x, target_enemy.pos.y)
@@ -61,6 +62,12 @@ class Projectile:
         if self.has_hit:
             return True
 
+        if self.effect_type == "fire_nova":
+            self.pos = self.start_pos
+            self._on_impact(enemies)
+            self.has_hit = True
+            return True
+
         # Track target if alive
         if self.target_enemy and self.target_enemy.is_alive:
             self.target_pos = self.target_enemy.pos
@@ -79,10 +86,11 @@ class Projectile:
             return False
 
     def _on_impact(self, enemies: List[Enemy]) -> None:
+        impact_center = self.start_pos if self.effect_type == "fire_nova" else self.pos
         if self.aoe_radius > 0.0:
             impacted = [
                 enemy for enemy in enemies
-                if enemy.is_alive and enemy.pos.distance_to(self.pos) <= self.aoe_radius
+                if enemy.is_alive and enemy.pos.distance_to(impact_center) <= self.aoe_radius
             ]
             if self.target_enemy and self.target_enemy.is_alive and self.target_enemy in impacted:
                 self._apply_payload(self.target_enemy, is_primary=True)

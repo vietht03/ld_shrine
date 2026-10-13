@@ -183,8 +183,8 @@ class FireDragon(DragonTower):
             target_enemy=target,
             speed=self.projectile_speed,
             damage=self.damage,
-            effect_type="fire",
-            aoe_radius=self.aoe_radius if self.level >= 3 else self.aoe_radius,
+            effect_type="fire_nova" if self.level >= 3 else "fire",
+            aoe_radius=self.aoe_radius,
             dot_damage=self.burn_damage,
             dot_interval=self.burn_interval,
             dot_duration=self.burn_duration,
@@ -204,7 +204,7 @@ class IceDragon(DragonTower):
             tower_id=tower_id,
             name="Ice Dragon",
             pos=pos,
-            gold_cost=80,
+            gold_cost=100,
             ruby_cost=0,
             attack_range=240.0,
             fire_interval=1.0
@@ -279,7 +279,7 @@ class PoisonDragon(DragonTower):
             tower_id=tower_id,
             name="Poison Dragon",
             pos=pos,
-            gold_cost=120,
+            gold_cost=100,
             ruby_cost=1,
             attack_range=180.0,
             fire_interval=1.2
