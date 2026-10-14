@@ -77,14 +77,29 @@ class ProgressManager:
 
 # Helper wave generators
 def _make_waves(wave_count: int, base_hp: float, base_speed: float) -> List[WaveConfig]:
+    # Đảm bảo ít nhất 8 lượt
+    wave_count = max(8, wave_count)
     waves = []
-    enemy_names = ["Goblin Scout", "Thief Raider", "Armored Bandit", "Dragon Slayer", "Shadow Assassin", "Dragon Boss"]
+    enemy_names = [
+        "Goblin Scout", "Thief Raider", "Armored Bandit",
+        "Dragon Slayer", "Shadow Assassin", "Warlord",
+        "Dark Knight", "Shadow Mage", "Elite Guardian", "Dragon Boss"
+    ]
     for i in range(wave_count):
-        count = 3 + i
-        hp = base_hp * (1.18 ** i)
-        speed = min(120.0, base_speed + i * 4.0)
-        gold = 25 + i * 5
-        name = enemy_names[min(i, len(enemy_names) - 1)]
+        # Wave cuối cùng luôn là boss wave (1 cơn thủ trùm mạnh)
+        is_boss_wave = (i == wave_count - 1)
+        if is_boss_wave:
+            count = 1
+            hp = base_hp * (1.18 ** i) * 8.0   # HP trùm gấp 8x
+            speed = max(35.0, base_speed - 10.0)
+            gold = 200
+            name = "Dragon Boss"
+        else:
+            count = 4 + i
+            hp = base_hp * (1.18 ** i)
+            speed = min(120.0, base_speed + i * 4.0)
+            gold = 25 + i * 6
+            name = enemy_names[min(i, len(enemy_names) - 2)]
         waves.append(
             WaveConfig(
                 enemy_count=count,
@@ -106,7 +121,7 @@ def get_level_data(level_id: int) -> LevelConfig:
     levels[1] = LevelConfig(
         level_id=1,
         name="1: Shrine Entrance",
-        starting_gold=400,
+        starting_gold=500,
         starting_eggs=5,
         waypoints=[
             Vec2(50, 350),
@@ -119,14 +134,14 @@ def get_level_data(level_id: int) -> LevelConfig:
             Vec2(450, 270),
             Vec2(700, 430)
         ],
-        waves=_make_waves(3, base_hp=65.0, base_speed=40.0)
+        waves=_make_waves(8, base_hp=65.0, base_speed=40.0)
     )
 
     # --- LEVEL 2: Whispering Canyon ---
     levels[2] = LevelConfig(
         level_id=2,
         name="2: Whispering Canyon",
-        starting_gold=360,
+        starting_gold=500,
         starting_eggs=5,
         waypoints=[
             Vec2(50, 480),
@@ -142,14 +157,14 @@ def get_level_data(level_id: int) -> LevelConfig:
             Vec2(550, 300),
             Vec2(750, 400)
         ],
-        waves=_make_waves(4, base_hp=80.0, base_speed=44.0)
+        waves=_make_waves(8, base_hp=80.0, base_speed=44.0)
     )
 
     # --- LEVEL 3: Emerald Pass ---
     levels[3] = LevelConfig(
         level_id=3,
         name="3: Emerald Pass",
-        starting_gold=340,
+        starting_gold=500,
         starting_eggs=5,
         waypoints=[
             Vec2(50, 200),
@@ -165,14 +180,14 @@ def get_level_data(level_id: int) -> LevelConfig:
             Vec2(600, 440),
             Vec2(780, 270)
         ],
-        waves=_make_waves(4, base_hp=95.0, base_speed=46.0)
+        waves=_make_waves(8, base_hp=95.0, base_speed=46.0)
     )
 
     # --- LEVEL 4: Magma Valley ---
     levels[4] = LevelConfig(
         level_id=4,
         name="4: Magma Valley",
-        starting_gold=320,
+        starting_gold=500,
         starting_eggs=5,
         waypoints=[
             Vec2(50, 550),
@@ -190,14 +205,14 @@ def get_level_data(level_id: int) -> LevelConfig:
             Vec2(680, 460),
             Vec2(800, 270)
         ],
-        waves=_make_waves(5, base_hp=110.0, base_speed=50.0)
+        waves=_make_waves(8, base_hp=110.0, base_speed=50.0)
     )
 
     # --- LEVEL 5: Frozen Ridge ---
     levels[5] = LevelConfig(
         level_id=5,
         name="5: Frozen Ridge",
-        starting_gold=300,
+        starting_gold=500,
         starting_eggs=5,
         waypoints=[
             Vec2(50, 350),
@@ -215,14 +230,14 @@ def get_level_data(level_id: int) -> LevelConfig:
             Vec2(510, 260),
             Vec2(720, 260)
         ],
-        waves=_make_waves(6, base_hp=125.0, base_speed=54.0)
+        waves=_make_waves(8, base_hp=125.0, base_speed=54.0)
     )
 
     # --- LEVEL 6: Shadow Gorge ---
     levels[6] = LevelConfig(
         level_id=6,
         name="6: Shadow Gorge",
-        starting_gold=280,
+        starting_gold=500,
         starting_eggs=5,
         waypoints=[
             Vec2(50, 180),
@@ -242,14 +257,14 @@ def get_level_data(level_id: int) -> LevelConfig:
             Vec2(650, 260),
             Vec2(820, 400)
         ],
-        waves=_make_waves(6, base_hp=140.0, base_speed=58.0)
+        waves=_make_waves(9, base_hp=140.0, base_speed=58.0)
     )
 
     # --- LEVEL 7: Thunder Summit ---
     levels[7] = LevelConfig(
         level_id=7,
         name="7: Thunder Summit",
-        starting_gold=270,
+        starting_gold=500,
         starting_eggs=5,
         waypoints=[
             Vec2(50, 520),
@@ -267,14 +282,14 @@ def get_level_data(level_id: int) -> LevelConfig:
             Vec2(610, 480),
             Vec2(800, 320)
         ],
-        waves=_make_waves(7, base_hp=160.0, base_speed=62.0)
+        waves=_make_waves(9, base_hp=160.0, base_speed=62.0)
     )
 
     # --- LEVEL 8: Inferno Cavern ---
     levels[8] = LevelConfig(
         level_id=8,
         name="8: Inferno Cavern",
-        starting_gold=260,
+        starting_gold=500,
         starting_eggs=5,
         waypoints=[
             Vec2(50, 250),
@@ -302,7 +317,7 @@ def get_level_data(level_id: int) -> LevelConfig:
     levels[9] = LevelConfig(
         level_id=9,
         name="9: Abyssal Shrine",
-        starting_gold=250,
+        starting_gold=500,
         starting_eggs=5,
         waypoints=[
             Vec2(50, 500),
@@ -329,7 +344,7 @@ def get_level_data(level_id: int) -> LevelConfig:
     levels[10] = LevelConfig(
         level_id=10,
         name="10: Dragon Sanctuary",
-        starting_gold=240,
+        starting_gold=500,
         starting_eggs=5,
         waypoints=[
             Vec2(50, 350),

@@ -125,9 +125,9 @@ class FireDragon(DragonTower):
             attack_range=200.0,
             fire_interval=1.2
         )
-        self.damage = 12.5
+        self.damage = 25.0          # x2 từ 12.5
         self.aoe_radius = 52.0
-        self.projectile_speed = 360.0
+        self.projectile_speed = 480.0
         self.burn_damage = 0.0
         self.burn_duration = 0.0
         self.burn_interval = 0.0
@@ -137,60 +137,78 @@ class FireDragon(DragonTower):
 
     def _on_upgrade(self) -> None:
         if self.level == 2:
-            self.damage = 22.5
+            self.damage = 45.0          # x2 từ 22.5
             self.aoe_radius = 60.0
             self.fire_interval = 1.0
             self.attack_range = 225.0
         elif self.level == 3:
-            self.damage = 30.0
+            self.damage = 60.0          # x2 từ 30.0
             self.aoe_radius = 90.0
             self.fire_interval = 0.5
-            self.attack_range = 176.0
+            self.attack_range = 200.0
             self.rotation_mode = True
-            self.burn_damage = 7.5
+            self.burn_damage = 15.0
             self.burn_duration = 3.0
             self.burn_interval = 1.0
         elif self.level == 4:
-            self.damage = 45.0
-            self.aoe_radius = 100.0
+            # Lv4-6: fire_aura 360° — đánh tất cả địch xung quanh tháp
+            self.damage = 90.0          # x2 từ 45.0
+            self.aoe_radius = 200.0     # aura radius = attack_range
             self.fire_interval = 0.4
             self.attack_range = 200.0
-            self.burn_damage = 7.5
+            self.burn_damage = 15.0
             self.burn_duration = 3.0
             self.burn_interval = 1.0
         elif self.level == 5:
-            self.damage = 80.0
-            self.aoe_radius = 110.0
+            self.damage = 160.0         # x2 từ 80.0
+            self.aoe_radius = 224.0
             self.fire_interval = 0.35
             self.attack_range = 224.0
             self.critical_chance = 0.20
-            self.burn_damage = 7.5
+            self.burn_damage = 15.0
             self.burn_duration = 3.0
             self.burn_interval = 1.0
         elif self.level == 6:
-            self.damage = 130.0
-            self.aoe_radius = 128.0
+            self.damage = 260.0         # x2 từ 130.0
+            self.aoe_radius = 256.0
             self.fire_interval = 0.25
             self.attack_range = 256.0
             self.critical_chance = 0.35
-            self.burn_damage = 7.5
+            self.burn_damage = 15.0
             self.burn_duration = 3.0
             self.burn_interval = 1.0
 
     def fire(self, target: Enemy) -> Projectile:
-        return Projectile(
-            start_pos=self.pos,
-            target_enemy=target,
-            speed=self.projectile_speed,
-            damage=self.damage,
-            effect_type="fire_nova" if self.level >= 3 else "fire",
-            aoe_radius=self.aoe_radius,
-            dot_damage=self.burn_damage,
-            dot_interval=self.burn_interval,
-            dot_duration=self.burn_duration,
-            critical_chance=self.critical_chance,
-            critical_multiplier=self.critical_multiplier,
-        )
+        if self.level >= 4:
+            # Lv4-6: Fire Aura — nổ 360° tức thì từ vị trí tháp
+            return Projectile(
+                start_pos=self.pos,
+                target_enemy=target,
+                speed=self.projectile_speed,
+                damage=self.damage,
+                effect_type="fire_aura",
+                aoe_radius=self.aoe_radius,
+                dot_damage=self.burn_damage,
+                dot_interval=self.burn_interval,
+                dot_duration=self.burn_duration,
+                critical_chance=self.critical_chance,
+                critical_multiplier=self.critical_multiplier,
+            )
+        elif self.level >= 1:
+            # Lv1-3: Fire Ray — tia lửa thẳng tới mục tiêu
+            return Projectile(
+                start_pos=self.pos,
+                target_enemy=target,
+                speed=self.projectile_speed,
+                damage=self.damage,
+                effect_type="fire_ray",
+                aoe_radius=0.0,
+                dot_damage=self.burn_damage,
+                dot_interval=self.burn_interval,
+                dot_duration=self.burn_duration,
+                critical_chance=self.critical_chance,
+                critical_multiplier=self.critical_multiplier,
+            )
 
 
 # ======================================================================

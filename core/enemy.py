@@ -225,12 +225,16 @@ class Enemy:
                 self.has_egg = True
                 stole_egg = True
                 self.follower.reverse_path()
+            else:
+                # Tổ hết trứng — kẻ địch quay về tay không
+                self.follower.reverse_path()
 
         if reached_spawn and self.follower.is_returning:
             if self.has_egg:
                 escaped = True
                 self.has_escaped = True
-                self.is_alive = False
+            # Dù có trứng hay không, khi về đến spawn thì rời khỏi map
+            self.is_alive = False
 
         return stole_egg, escaped
 

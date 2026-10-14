@@ -68,6 +68,13 @@ class Projectile:
             self.has_hit = True
             return True
 
+        if self.effect_type == "fire_aura":
+            # Nổ 360° tức thì từ vị trí tháp (start_pos)
+            self.pos = self.start_pos
+            self._on_impact(enemies)
+            self.has_hit = True
+            return True
+
         # Track target if alive
         if self.target_enemy and self.target_enemy.is_alive:
             self.target_pos = self.target_enemy.pos
@@ -86,7 +93,19 @@ class Projectile:
             return False
 
     def _on_impact(self, enemies: List[Enemy]) -> None:
-        impact_center = self.start_pos if self.effect_type == "fire_nova" else self.pos
+        if self.effect_type in ("fire_nova", "fire_aura"):
+            # Nổ từ vị trí tháp, đánh tất cả địch trong bán kính
+            impact_center = self.start_pos
+            impacted = [
+                enemy for enemy in enemies
+                if enemy.is_alive and enemy.pos.distance_to(impact_center) <= self.aoe_radius
+            ]
+            for enemy in impacted:
+                is_primary = (enemy is self.target_enemy)
+                self._apply_payload(enemy, is_primary=is_primary)
+            return
+
+        impact_center = self.pos
         if self.aoe_radius > 0.0:
             impacted = [
                 enemy for enemy in enemies
@@ -103,7 +122,7 @@ class Projectile:
 
     def _calculate_damage(self, base_damage: float, is_primary: bool) -> float:
         damage = base_damage
-        if self.effect_type == "fire" and self.critical_chance > 0 and random.random() < self.critical_chance:
+        if self.effect_type in ("fire", "fire_ray", "fire_aura") and self.critical_chance > 0 and random.random() < self.critical_chance:
             damage *= self.critical_multiplier
         if self.aoe_radius > 0.0 and not is_primary:
             damage *= 0.8
@@ -139,7 +158,7 @@ class Projectile:
             if self.knockback_chance > 0 and random.random() < self.knockback_chance and not enemy.immune_to_knockback and hasattr(enemy, "follower"):
                 enemy.follower.reverse_path()
 
-        elif self.effect_type == "fire":
+        elif self.effect_type in ("fire", "fire_ray", "fire_aura", "fire_nova"):
             if self.dot_damage > 0:
                 enemy.status_manager.apply_dot(self._resolve_dot_damage(enemy), self.dot_interval, self.dot_duration)
 

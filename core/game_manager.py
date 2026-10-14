@@ -341,8 +341,17 @@ class GameManager:
         for proj in self.projectiles[:]:
             hit = proj.update(dt, self.enemies)
             if hit:
-                if proj.effect_type in {"ice", "freeze", "poison", "fire"}:
+                if proj.effect_type in {"ice", "freeze", "poison", "fire", "fire_ray"}:
                     self.log(f"STATUS EFFECT {proj.effect_type.upper()} applied")
+                elif proj.effect_type == "fire_aura":
+                    # Thêm visual effect vòng nova 360° tại vị trí tháp
+                    self.spell_effects.append({
+                        "type": "fire_aura",
+                        "pos": Vec2(proj.start_pos.x, proj.start_pos.y),
+                        "radius": proj.aoe_radius,
+                        "timer": 0.35
+                    })
+                    self.log(f"FIRE AURA 360° blast at ({proj.start_pos.x:.0f},{proj.start_pos.y:.0f}) r={proj.aoe_radius:.0f}")
                 self.projectiles.remove(proj)
 
         # 9. Mage silence effects
@@ -355,6 +364,8 @@ class GameManager:
                             self.log(f"MAGE SILENCED {tower.name} for 2.5s")
                             break
 
-        # 9. Victory check
+        # 10. Victory check — chỉ cần: all waves done + no enemies alive + player_eggs > 0
         if self.wave_spawner.is_finished and len(self.enemies) == 0 and self.player_eggs > 0:
+            # Dọn dropped eggs khỏi map để không còn gì lơ lẫng
+            self.dropped_eggs.clear()
             self.is_victory = True

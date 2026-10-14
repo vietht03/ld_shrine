@@ -39,11 +39,14 @@ TOWER_META: Dict[type, Dict] = {
 }
 
 PROJ_COLORS: Dict[str, tuple] = {
-    "fire":    (255,120,30),
-    "ice":     (100,220,255),
-    "freeze":  (200,240,255),
-    "poison":  (130,255,90),
-    "fireball":(255,60,0),
+    "fire":      (255,120,30),
+    "fire_ray":  (255,180,50),
+    "fire_aura": (255,60,0),
+    "fire_nova": (255,80,0),
+    "ice":       (100,220,255),
+    "freeze":    (200,240,255),
+    "poison":    (130,255,90),
+    "fireball":  (255,60,0),
 }
 
 
@@ -332,6 +335,17 @@ class GameplayView(arcade.View):
                     arcade.XYWH(SCREEN_WIDTH//2, SCREEN_HEIGHT//2, SCREEN_WIDTH, SCREEN_HEIGHT),
                     (100, 200, 255, alpha)
                 )
+            elif eff["type"] == "fire_aura":
+                # Vòng nova lửa 360° — mở rộng dần, mờ dần
+                ratio = 1.0 - (t / 0.35)   # 0→1 khi effect kết thúc
+                r = eff["radius"] * (0.4 + 0.6 * ratio)  # bán kính nở dần
+                alpha = int(255 * (1.0 - ratio))
+                ey = self._world_y(eff["pos"].y)
+                # Vòng lửa ngoài
+                arcade.draw_circle_filled(eff["pos"].x, ey, r, (255, 80, 10, min(180, alpha)))
+                arcade.draw_circle_outline(eff["pos"].x, ey, r, (255, 220, 50, alpha), 4)
+                # Vòng lửa trong (nhỏ hơn, sáng hơn)
+                arcade.draw_circle_filled(eff["pos"].x, ey, r * 0.55, (255, 180, 50, min(120, alpha)))
 
     # ──────────────────────────────────────────────────────────────────
     # PEDESTALS & TOWERS
@@ -432,10 +446,28 @@ class GameplayView(arcade.View):
         for proj in self.game.projectiles:
             color = PROJ_COLORS.get(proj.effect_type, (255,255,100))
             py = self._world_y(proj.pos.y)
-            size = 7 if proj.effect_type in ("fireball","fire") else 5
-            arcade.draw_circle_filled(proj.pos.x, py, size, color)
-            # Trail glow
-            arcade.draw_circle_filled(proj.pos.x, py, size+3, (*color, 60))
+
+            if proj.effect_type == "fire_ray":
+                # Vẽ tia lửa thẳng từ tháp tới mục tiêu
+                sy = self._world_y(proj.start_pos.y)
+                ty_screen = self._world_y(proj.target_pos.y)
+                # Lõi sáng
+                arcade.draw_line(proj.start_pos.x, sy, proj.target_pos.x, ty_screen,
+                                 (255, 255, 180, 220), 3)
+                # Lớp ngoài màu cam
+                arcade.draw_line(proj.start_pos.x, sy, proj.target_pos.x, ty_screen,
+                                 (255, 120, 20, 120), 6)
+                # Đầu tia (quầng sáng nhỏ ở vị trí hiện tại)
+                arcade.draw_circle_filled(proj.pos.x, py, 5, (255, 220, 100))
+                arcade.draw_circle_filled(proj.pos.x, py, 9, (255, 120, 20, 80))
+            elif proj.effect_type in ("fire_aura", "fire_nova"):
+                # Đã được xử lý tức thì, chỉ hiện thị effect
+                pass
+            else:
+                size = 7 if proj.effect_type in ("fireball", "fire") else 5
+                arcade.draw_circle_filled(proj.pos.x, py, size, color)
+                # Trail glow
+                arcade.draw_circle_filled(proj.pos.x, py, size+3, (*color, 60))
 
     def _draw_dropped_eggs(self) -> None:
         for egg in self.game.dropped_eggs:
