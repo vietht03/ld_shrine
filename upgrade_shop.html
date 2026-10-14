@@ -31,6 +31,229 @@ body {
   overflow: hidden;
 }
 
+.setting-button {
+  position: absolute;
+  right: 18px;
+  top: 14px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 200, 80, 0.75);
+  background: radial-gradient(circle at 30% 30%, #5c3414, #250d04 75%);
+  color: var(--gold);
+  font-size: 1.3rem;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(255, 180, 60, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.setting-button:hover {
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 0 24px rgba(255, 180, 60, 0.45);
+}
+
+.settings-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.settings-modal.open {
+  display: flex;
+}
+
+.settings-panel {
+  width: min(900px, 92vw);
+  background: linear-gradient(180deg, #2c1706 0%, #140b04 100%);
+  border: 3px solid var(--border-gold);
+  border-radius: 16px;
+  box-shadow: 0 0 0 6px rgba(28, 12, 2, 0.8), 0 0 40px rgba(180,100,20,0.35);
+  overflow: hidden;
+}
+
+.settings-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  background: linear-gradient(180deg, #4b2208 0%, #281006 100%);
+  border-bottom: 2px solid var(--border-gold);
+}
+
+.settings-toolbar h2 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+}
+
+.settings-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 200, 80, 0.7);
+  background: #1e0d04;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 18px 8px;
+  background: rgba(35,15,4,0.8);
+  border-bottom: 1px solid rgba(255, 200, 80, 0.2);
+}
+
+.settings-tab {
+  border: 1px solid rgba(255, 200, 80, 0.5);
+  background: rgba(255, 200, 80, 0.05);
+  color: var(--text-light);
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  transition: all 0.15s ease;
+}
+
+.settings-tab.active {
+  background: linear-gradient(180deg, rgba(255, 200, 80, 0.28), rgba(255, 130, 0, 0.12));
+  border-color: var(--gold);
+  box-shadow: 0 0 18px rgba(255, 180, 60, 0.22);
+}
+
+.settings-content {
+  padding: 18px;
+  min-height: 420px;
+}
+
+.settings-section {
+  display: none;
+}
+
+.settings-section.active {
+  display: block;
+}
+
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.option-card {
+  background: rgba(255, 200, 80, 0.04);
+  border: 1px solid rgba(255, 200, 80, 0.25);
+  border-radius: 12px;
+  color: var(--text-light);
+  padding: 15px 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.option-card:hover {
+  border-color: rgba(255, 200, 80, 0.7);
+  transform: translateY(-1px);
+}
+
+.option-card.selected {
+  background: linear-gradient(180deg, rgba(255, 190, 60, 0.16), rgba(255, 100, 0, 0.06));
+  border-color: var(--gold);
+  box-shadow: 0 0 18px rgba(255, 180, 60, 0.2);
+}
+
+.option-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.option-desc {
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: #d6b36d;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.info-card {
+  background: rgba(255, 200, 80, 0.04);
+  border: 1px solid rgba(255, 200, 80, 0.26);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.info-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.info-card-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  border: 2px solid rgba(255,255,255,0.2);
+  box-shadow: inset 0 0 18px rgba(255,255,255,0.05);
+}
+
+.info-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.info-card-desc {
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: #d0b479;
+  min-height: 64px;
+}
+
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 0.72rem;
+}
+
+.info-table th,
+.info-table td {
+  border: 1px solid rgba(255, 200, 80, 0.18);
+  text-align: center;
+  padding: 7px 5px;
+}
+
+.info-table th {
+  background: rgba(255, 200, 80, 0.08);
+  color: var(--gold);
+}
+
+.info-table td {
+  color: #f0d7a0;
+}
+
 /* ══════════════════════════════════════════
    CONTAINER
 ══════════════════════════════════════════ */
@@ -481,7 +704,19 @@ body {
 
   <!-- Header -->
   <div class="shop-header">
-    <h1 class="shop-title">Skill</h1>
+    <button class="setting-button" id="settingsButton" aria-label="Settings">⚙</button>
+    <h1 class="shop-title" id="shopTitle">Skill</h1>
+  </div>
+
+  <div class="settings-modal" id="settingsModal">
+    <div class="settings-panel">
+      <div class="settings-toolbar">
+        <h2 id="settingsTitle">Settings</h2>
+        <button class="settings-close" id="closeSettings" aria-label="Close settings">✕</button>
+      </div>
+      <div class="settings-tabs" id="settingsTabs"></div>
+      <div class="settings-content" id="settingsContent"></div>
+    </div>
   </div>
 
   <!-- Body -->
@@ -545,11 +780,338 @@ const UPGRADES = [
   { id:'dragon_eye',    row:2, name:'Dragon Eye',     desc:'All-seeing dragon eye grants extra gold rewards from each enemy wave.',        icon:'👁', orb:'orb-eye',       glow:'#4090ff', stat:'Wave Gold Bonus',base:0,    step:10,   unit:'g',  max:10, costBase:550, costScale:1.50 },
 ];
 
-const ROW_LABELS = [
-  '⚔ Upgrading any skill in this row increases Attack Power',
-  '🛡 Upgrading any skill in this row increases Defense & Support',
-  '💰 Upgrading any skill in this row increases Economy & Special Abilities',
+const LANG = {
+  vi: {
+    settings: 'Cài đặt',
+    language: 'Ngôn ngữ',
+    audio: 'Âm thanh',
+    dragonInfo: 'Rồng',
+    enemyInfo: 'Kẻ địch',
+    skillTitle: 'Kỹ năng',
+    goldLabel: 'Vàng',
+    continueLabel: 'Tiếp tục',
+    langEn: 'Tiếng Anh',
+    langVi: 'Tiếng Việt',
+    audioOn: 'Mở',
+    audioOff: 'Tắt',
+    placeholder: '⚔ Chọn kỹ năng\nđể xem chi tiết nâng cấp',
+    soundOnDesc: 'Bật hiệu ứng âm thanh trong trò chơi.',
+    soundOffDesc: 'Tắt toàn bộ âm thanh của trò chơi.',
+    langEnDesc: 'Chuyển giao diện sang tiếng Anh.',
+    langViDesc: 'Chuyển giao diện sang tiếng Việt.',
+    rowAttack: '⚔ Nâng cấp kỹ năng trong hàng này tăng sức mạnh tấn công',
+    rowDefense: '🛡 Nâng cấp kỹ năng trong hàng này tăng phòng thủ & hỗ trợ',
+    rowEconomy: '💰 Nâng cấp kỹ năng trong hàng này tăng kinh tế & kỹ năng đặc biệt',
+    sideDragon: 'Rồng',
+    sideEnemy: 'Kẻ địch',
+    dragonDesc: 'Bộ ba rồng chiến đấu với khả năng riêng biệt và tăng trưởng qua 6 cấp.',
+    enemyDesc: 'Các mục tiêu chiến đấu với tốc độ, máu và điểm kinh nghiệm khác nhau.'
+  },
+  en: {
+    settings: 'Settings',
+    language: 'Language',
+    audio: 'Game Audio',
+    dragonInfo: 'Dragon',
+    enemyInfo: 'Enemy',
+    skillTitle: 'Skill',
+    goldLabel: 'Gold',
+    continueLabel: 'Continue',
+    langEn: 'English',
+    langVi: 'Vietnamese',
+    audioOn: 'On',
+    audioOff: 'Off',
+    placeholder: '⚔ Select a skill\nto view upgrade details',
+    soundOnDesc: 'Enable in-game sound effects and music.',
+    soundOffDesc: 'Mute all game sounds and effects.',
+    langEnDesc: 'Switch the interface to English.',
+    langViDesc: 'Switch the interface to Vietnamese.',
+    rowAttack: '⚔ Upgrading any skill in this row increases Attack Power',
+    rowDefense: '🛡 Upgrading any skill in this row increases Defense & Support',
+    rowEconomy: '💰 Upgrading any skill in this row increases Economy & Special Abilities',
+    sideDragon: 'Dragon',
+    sideEnemy: 'Enemy',
+    dragonDesc: 'Three dragons with distinct combat styles and 6-level progression.',
+    enemyDesc: 'Enemy units with different speed, health, and rewards across the campaign.'
+  }
+};
+
+const DRAGON_INFO = [
+  {
+    key: 'fire',
+    icon: '🔥',
+    name: { vi: 'Rồng Lửa', en: 'Fire Dragon' },
+    desc: {
+      vi: 'Rồng lửa tấn công diện rộng, gây burn và thiêu đốt kẻ địch ở mọi khoảng cách ngắn.',
+      en: 'Fire dragon deals wide-area damage and burns enemies with relentless flame pressure.'
+    },
+    stats: [
+      { lv: 1, atk: 22, range: 120, hp: 180, special: 'Burn 2/s' },
+      { lv: 2, atk: 29, range: 128, hp: 210, special: 'Burn 3/s' },
+      { lv: 3, atk: 36, range: 136, hp: 240, special: 'Burn 4/s' },
+      { lv: 4, atk: 44, range: 144, hp: 280, special: 'Burn 5/s' },
+      { lv: 5, atk: 52, range: 152, hp: 320, special: 'Burn 6/s' },
+      { lv: 6, atk: 62, range: 160, hp: 360, special: 'Burn 7/s' }
+    ]
+  },
+  {
+    key: 'ice',
+    icon: '❄',
+    name: { vi: 'Rồng Băng', en: 'Ice Dragon' },
+    desc: {
+      vi: 'Rồng băng làm chậm, đóng băng và kiểm soát tuyến chiến đấu bằng hiệu ứng làm chậm mạnh.',
+      en: 'Ice dragon slows and freezes enemies, controlling battle lanes with strong crowd control.'
+    },
+    stats: [
+      { lv: 1, atk: 18, range: 140, hp: 170, special: 'Slow 20%' },
+      { lv: 2, atk: 24, range: 148, hp: 200, special: 'Slow 28%' },
+      { lv: 3, atk: 31, range: 156, hp: 230, special: 'Freeze 1.5s' },
+      { lv: 4, atk: 38, range: 164, hp: 260, special: 'Freeze 2.1s' },
+      { lv: 5, atk: 44, range: 172, hp: 300, special: 'Freeze 2.8s' },
+      { lv: 6, atk: 52, range: 180, hp: 340, special: 'Freeze 3.4s' }
+    ]
+  },
+  {
+    key: 'poison',
+    icon: '☠',
+    name: { vi: 'Rồng Độc', en: 'Poison Dragon' },
+    desc: {
+      vi: 'Rồng độc phun chất độc kéo dài, giết kẻ địch từ xa đồng thời tiêu hao sinh lực dần.',
+      en: 'Poison dragon applies a lasting toxin, draining enemy health steadily from a safe distance.'
+    },
+    stats: [
+      { lv: 1, atk: 20, range: 130, hp: 175, special: 'DoT 6' },
+      { lv: 2, atk: 26, range: 138, hp: 205, special: 'DoT 8' },
+      { lv: 3, atk: 33, range: 146, hp: 235, special: 'DoT 11' },
+      { lv: 4, atk: 40, range: 154, hp: 270, special: 'DoT 14' },
+      { lv: 5, atk: 47, range: 162, hp: 310, special: 'DoT 17' },
+      { lv: 6, atk: 56, range: 170, hp: 350, special: 'DoT 21' }
+    ]
+  }
 ];
+
+const ENEMY_INFO = [
+  {
+    key: 'scout',
+    icon: '🗡',
+    name: { vi: 'Kẻ Trinh Sát', en: 'Scout Raider' },
+    desc: {
+      vi: 'Kẻ trinh sát nhẹ, nhanh và tập trung cướp trứng bằng tốc độ di chuyển cao.',
+      en: 'A light scout that prioritizes speed and egg theft before the defense can react.'
+    },
+    stats: [
+      { lv: 1, hp: 70, speed: 54, gold: 18, special: 'Fast steal' },
+      { lv: 2, hp: 88, speed: 58, gold: 22, special: 'Fast steal' },
+      { lv: 3, hp: 108, speed: 62, gold: 26, special: 'Fast steal' },
+      { lv: 4, hp: 132, speed: 66, gold: 30, special: 'Fast steal' },
+      { lv: 5, hp: 158, speed: 70, gold: 35, special: 'Fast steal' },
+      { lv: 6, hp: 188, speed: 76, gold: 40, special: 'Fast steal' }
+    ]
+  },
+  {
+    key: 'brute',
+    icon: '🛡',
+    name: { vi: 'Kẻ Đầu Gấu', en: 'Brute Guard' },
+    desc: {
+      vi: 'Kẻ chịu đựng lớn, chậm hơn nhưng gây áp lực bằng máu và sức chịu đòn cao.',
+      en: 'A heavy bruiser with large HP and a slow but punishing advance on the shrine.'
+    },
+    stats: [
+      { lv: 1, hp: 120, speed: 36, gold: 25, special: 'Heavy armor' },
+      { lv: 2, hp: 150, speed: 39, gold: 30, special: 'Heavy armor' },
+      { lv: 3, hp: 182, speed: 42, gold: 36, special: 'Heavy armor' },
+      { lv: 4, hp: 220, speed: 45, gold: 42, special: 'Heavy armor' },
+      { lv: 5, hp: 260, speed: 48, gold: 49, special: 'Heavy armor' },
+      { lv: 6, hp: 310, speed: 52, gold: 56, special: 'Heavy armor' }
+    ]
+  },
+  {
+    key: 'rogue',
+    icon: '🕶',
+    name: { vi: 'Kẻ Ăn Trộm', en: 'Shadow Rogue' },
+    desc: {
+      vi: 'Kẻ lén lút có khả năng đánh cắp trứng nhanh và tạo rối loạn tuyến đường phòng thủ.',
+      en: 'A stealthy infiltrator that targets the weakest defensive line and steals eggs in bursts.'
+    },
+    stats: [
+      { lv: 1, hp: 95, speed: 48, gold: 22, special: 'Stealth rush' },
+      { lv: 2, hp: 116, speed: 52, gold: 28, special: 'Stealth rush' },
+      { lv: 3, hp: 142, speed: 56, gold: 33, special: 'Stealth rush' },
+      { lv: 4, hp: 170, speed: 60, gold: 39, special: 'Stealth rush' },
+      { lv: 5, hp: 200, speed: 64, gold: 45, special: 'Stealth rush' },
+      { lv: 6, hp: 232, speed: 68, gold: 52, special: 'Stealth rush' }
+    ]
+  }
+];
+
+const ROW_LABELS = () => [
+  LANG[currentLanguage].rowAttack,
+  LANG[currentLanguage].rowDefense,
+  LANG[currentLanguage].rowEconomy,
+];
+
+const SETTINGS_TABS = ['language', 'audio', 'dragon', 'enemy'];
+let currentLanguage = localStorage.getItem('ld_shrine_lang') || 'vi';
+let currentSettingsTab = 'language';
+let soundEnabled = localStorage.getItem('ld_shrine_sound') !== 'off';
+
+function getText(key) {
+  return LANG[currentLanguage][key] || key;
+}
+
+function renderLocalizedText() {
+  const title = document.getElementById('shopTitle');
+  const goldLabel = document.querySelector('.gold-label');
+  const continueBtn = document.querySelector('.btn-continue');
+  const settingsTitle = document.getElementById('settingsTitle');
+
+  if (title) title.textContent = getText('skillTitle');
+  if (goldLabel) goldLabel.textContent = getText('goldLabel');
+  if (continueBtn) continueBtn.innerHTML = `${getText('continueLabel')} <span class="arrow">➤</span>`;
+  if (settingsTitle) settingsTitle.textContent = getText('settings');
+}
+
+function renderSettingsTabs() {
+  const tabsEl = document.getElementById('settingsTabs');
+  if (!tabsEl) return;
+
+  tabsEl.innerHTML = SETTINGS_TABS.map(tab => `
+    <button class="settings-tab ${currentSettingsTab === tab ? 'active' : ''}" data-tab="${tab}">
+      ${getText(tab === 'language' ? 'language' : tab === 'audio' ? 'audio' : tab === 'dragon' ? 'dragonInfo' : 'enemyInfo')}
+    </button>
+  `).join('');
+}
+
+function renderLanguageOptions() {
+  return `
+    <div class="option-grid">
+      <button class="option-card ${currentLanguage === 'en' ? 'selected' : ''}" data-language="en">
+        <span class="option-label">${getText('langEn')}</span>
+        <span class="option-desc">${getText('langEnDesc')}</span>
+      </button>
+      <button class="option-card ${currentLanguage === 'vi' ? 'selected' : ''}" data-language="vi">
+        <span class="option-label">${getText('langVi')}</span>
+        <span class="option-desc">${getText('langViDesc')}</span>
+      </button>
+    </div>
+  `;
+}
+
+function renderAudioOptions() {
+  return `
+    <div class="option-grid">
+      <button class="option-card ${soundEnabled ? 'selected' : ''}" data-audio="on">
+        <span class="option-label">${getText('audioOn')}</span>
+        <span class="option-desc">${getText('soundOnDesc')}</span>
+      </button>
+      <button class="option-card ${!soundEnabled ? 'selected' : ''}" data-audio="off">
+        <span class="option-label">${getText('audioOff')}</span>
+        <span class="option-desc">${getText('soundOffDesc')}</span>
+      </button>
+    </div>
+  `;
+}
+
+function renderDragonInfo() {
+  return `
+    <div class="settings-section active">
+      <div class="option-desc" style="margin-bottom: 14px;">${getText('dragonDesc')}</div>
+      <div class="info-grid">
+        ${DRAGON_INFO.map(dragon => `
+          <div class="info-card">
+            <div class="info-card-header">
+              <div class="info-card-icon" style="background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.18), rgba(255,150,0,0.14));">${dragon.icon}</div>
+              <div class="info-card-name">${dragon.name[currentLanguage]}</div>
+            </div>
+            <div class="info-card-desc">${dragon.desc[currentLanguage]}</div>
+            <table class="info-table">
+              <thead>
+                <tr>
+                  <th>Lv</th>
+                  <th>ATK</th>
+                  <th>RNG</th>
+                  <th>HP</th>
+                  <th>Skill</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${dragon.stats.map(s => `
+                  <tr>
+                    <td>${s.lv}</td>
+                    <td>${s.atk}</td>
+                    <td>${s.range}</td>
+                    <td>${s.hp}</td>
+                    <td>${s.special}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderEnemyInfo() {
+  return `
+    <div class="settings-section active">
+      <div class="option-desc" style="margin-bottom: 14px;">${getText('enemyDesc')}</div>
+      <div class="info-grid">
+        ${ENEMY_INFO.map(enemy => `
+          <div class="info-card">
+            <div class="info-card-header">
+              <div class="info-card-icon" style="background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.12), rgba(180,80,255,0.12));">${enemy.icon}</div>
+              <div class="info-card-name">${enemy.name[currentLanguage]}</div>
+            </div>
+            <div class="info-card-desc">${enemy.desc[currentLanguage]}</div>
+            <table class="info-table">
+              <thead>
+                <tr>
+                  <th>Lv</th>
+                  <th>HP</th>
+                  <th>SPD</th>
+                  <th>Gold</th>
+                  <th>Skill</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${enemy.stats.map(s => `
+                  <tr>
+                    <td>${s.lv}</td>
+                    <td>${s.hp}</td>
+                    <td>${s.speed}</td>
+                    <td>${s.gold}</td>
+                    <td>${s.special}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderSettingsContent() {
+  const contentEl = document.getElementById('settingsContent');
+  if (!contentEl) return;
+
+  const tabMap = {
+    language: `<div class="settings-section active">${renderLanguageOptions()}</div>`,
+    audio: `<div class="settings-section active">${renderAudioOptions()}</div>`,
+    dragon: renderDragonInfo(),
+    enemy: renderEnemyInfo()
+  };
+
+  contentEl.innerHTML = tabMap[currentSettingsTab] || tabMap.language;
+}
+
+function renderSettingsUI() {
+  renderLocalizedText();
+  renderSettingsTabs();
+  renderSettingsContent();
+}
 
 /* ─────────────────────────────────────────
    STATE — load from localStorage + shop_state.json
@@ -647,7 +1209,7 @@ function renderGrid() {
 
   document.getElementById('skillArea').innerHTML = rows.map((items, ri) => `
     <div class="skill-row">
-      <div class="row-label">${ROW_LABELS[ri]}</div>
+      <div class="row-label">${ROW_LABELS()[ri]}</div>
       <div class="skill-icons">
         ${items.map(u => {
           const level = lv(u);
@@ -733,10 +1295,17 @@ function renderGold() {
 function renderAll() {
   renderGrid();
   renderGold();
+  renderLocalizedText();
   if (selectedId) {
     const u = UPGRADES.find(x => x.id === selectedId);
     if (u) renderDetail(u);
   }
+}
+
+function toggleSettings(open = true) {
+  const modal = document.getElementById('settingsModal');
+  if (!modal) return;
+  modal.classList.toggle('open', open);
 }
 
 /* ─────────────────────────────────────────
@@ -791,13 +1360,62 @@ document.addEventListener('keydown', e => {
     selectedId = null;
     renderGrid();
     document.getElementById('detailPanel').innerHTML =
-      '<div class="detail-placeholder">⚔ Select a skill<br>to view upgrade details</div>';
+      `<div class="detail-placeholder">${getText('placeholder').replace('\n', '<br>')}</div>`;
+    if (document.getElementById('settingsModal')?.classList.contains('open')) {
+      toggleSettings(false);
+    }
+  }
+});
+
+document.addEventListener('click', (event) => {
+  const settingsButton = event.target.closest('#settingsButton');
+  if (settingsButton) {
+    toggleSettings(true);
+    return;
+  }
+
+  const closeButton = event.target.closest('#closeSettings');
+  if (closeButton) {
+    toggleSettings(false);
+    return;
+  }
+
+  const modal = event.target.closest('#settingsModal');
+  if (modal && event.target === modal) {
+    toggleSettings(false);
+    return;
+  }
+
+  const tabButton = event.target.closest('[data-tab]');
+  if (tabButton) {
+    currentSettingsTab = tabButton.dataset.tab;
+    renderSettingsUI();
+    return;
+  }
+
+  const langButton = event.target.closest('[data-language]');
+  if (langButton) {
+    currentLanguage = langButton.dataset.language;
+    localStorage.setItem('ld_shrine_lang', currentLanguage);
+    renderSettingsUI();
+    renderAll();
+    return;
+  }
+
+  const audioButton = event.target.closest('[data-audio]');
+  if (audioButton) {
+    soundEnabled = audioButton.dataset.audio === 'on';
+    localStorage.setItem('ld_shrine_sound', soundEnabled ? 'on' : 'off');
+    renderSettingsUI();
+    return;
   }
 });
 
 /* ─────────────────────────────────────────
    INIT
 ───────────────────────────────────────── */
+renderSettingsUI();
+
 // Note: renderAll() and selectSkill() are called inside the async loader above.
 // Fallback in case async hasn't fired yet:
 if (document.getElementById('goldDisplay').textContent === '0') {

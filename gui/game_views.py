@@ -75,6 +75,48 @@ class MainMenuView(arcade.View):
         super().__init__()
         self.mouse_pos = Vec2(0, 0)
         self.anim_t: float = 0.0
+        self.settings_open = False
+        self.language = "vi"
+        self.sound_on = True
+
+    def _draw_settings_button(self) -> None:
+        x = SCREEN_WIDTH - 52
+        y = 34
+        btn = arcade.XYWH(x - 18, y - 16, 36, 32)
+        hovered = self.mouse_pos.to_tuple() in btn
+        arcade.draw_rect_filled(btn, (220, 180, 30) if hovered else (100, 80, 20))
+        arcade.draw_rect_outline(btn, (255, 220, 120), 2)
+        arcade.draw_text("SET", x - 16, y - 10, (255, 255, 255), 10, bold=True)
+
+    def _draw_settings_panel(self) -> None:
+        panel_x, panel_y = SCREEN_WIDTH - 245, SCREEN_HEIGHT // 2 - 80
+        panel_w, panel_h = 210, 170
+        panel = arcade.XYWH(panel_x, panel_y, panel_w, panel_h)
+        arcade.draw_rect_filled(panel, (18, 24, 30))
+        arcade.draw_rect_outline(panel, (220, 180, 30), 3)
+
+        title_y = panel_y + panel_h - 28
+        arcade.draw_text("CAI DAT", panel_x + 16, title_y, (255, 220, 90), 18, bold=True)
+
+        lang_x = panel_x + 16
+        lang_btn = arcade.XYWH(lang_x, panel_y + 106, 170, 28)
+        lang_hovered = self.mouse_pos.to_tuple() in lang_btn
+        arcade.draw_rect_filled(lang_btn, (50, 100, 180) if lang_hovered else (35, 70, 120))
+        arcade.draw_rect_outline(lang_btn, (160, 220, 255), 1)
+        arcade.draw_text("LANG: VI/EN", lang_x + 8, panel_y + 112, (255, 255, 255), 11, bold=True)
+
+        sound_btn = arcade.XYWH(lang_x, panel_y + 68, 170, 28)
+        sound_hovered = self.mouse_pos.to_tuple() in sound_btn
+        label = "SOUND ON" if self.sound_on else "SOUND OFF"
+        arcade.draw_rect_filled(sound_btn, (30, 120, 60) if sound_hovered else (22, 80, 42))
+        arcade.draw_rect_outline(sound_btn, (120, 255, 160), 1)
+        arcade.draw_text(label, lang_x + 8, panel_y + 74, (255, 255, 255), 11, bold=True)
+
+        back_rect = arcade.XYWH(lang_x, panel_y + 24, 170, 30)
+        back_hover = self.mouse_pos.to_tuple() in back_rect
+        arcade.draw_rect_filled(back_rect, (100, 35, 35) if back_hover else (70, 25, 25))
+        arcade.draw_rect_outline(back_rect, (255, 180, 90), 2)
+        arcade.draw_text("BACK", lang_x + 62, panel_y + 30, (255, 255, 255), 12, bold=True)
 
     def on_update(self, dt: float) -> None:
         self.anim_t += dt
@@ -106,15 +148,19 @@ class MainMenuView(arcade.View):
 
         # Buttons
         for label, by, base_c, hover_c in [
-            ("CHƠI GAME",     cy-40,  (160,20,20), (220,60,30)),
-            ("🎯 KỸ NĂNG",   cy-95,  (30,80,150), (50,120,210)),
-            ("THOÁT",         cy-150, (40,40,50),  (80,80,90)),
+            ("CHOI GAME",     cy-40,  (160,20,20), (220,60,30)),
+            ("KY NANG",       cy-95,  (30,80,150), (50,120,210)),
+            ("THOAT",         cy-150, (40,40,50),  (80,80,90)),
         ]:
             rect = arcade.XYWH(cx, by, 220, 48)
             hovered = self.mouse_pos.to_tuple() in rect
             arcade.draw_rect_filled(rect, hover_c if hovered else base_c)
             arcade.draw_rect_outline(rect, (220,180,30) if hovered else (100,80,20), 2)
             arcade.draw_text(label, cx-62, by-8, (255,255,255), 14, bold=True)
+
+        self._draw_settings_button()
+        if self.settings_open:
+            self._draw_settings_panel()
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_pos = Vec2(x, y)
@@ -123,6 +169,27 @@ class MainMenuView(arcade.View):
         from gui.skill_shop_view import SkillShopView
         cx = SCREEN_WIDTH / 2
         cy = SCREEN_HEIGHT / 2
+
+        if self.settings_open:
+            panel_x, panel_y = SCREEN_WIDTH - 245, SCREEN_HEIGHT // 2 - 80
+            lang_btn = arcade.XYWH(panel_x + 16, panel_y + 106, 170, 28)
+            sound_btn = arcade.XYWH(panel_x + 16, panel_y + 68, 170, 28)
+            back_rect = arcade.XYWH(panel_x + 16, panel_y + 24, 170, 30)
+            if (x, y) in back_rect:
+                self.settings_open = False
+                return
+            if (x, y) in lang_btn:
+                self.language = "en" if self.language == "vi" else "vi"
+                return
+            if (x, y) in sound_btn:
+                self.sound_on = not self.sound_on
+                return
+
+        settings_btn = arcade.XYWH(SCREEN_WIDTH - 52, 34, 36, 32)
+        if (x, y) in settings_btn:
+            self.settings_open = True
+            return
+
         if (x,y) in arcade.XYWH(cx, cy-40, 220, 48):
             self.window.show_view(LevelSelectView())
         elif (x,y) in arcade.XYWH(cx, cy-95, 220, 48):
