@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lair Defense: Shrine — Skill Upgrade Shop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   ROOT & RESET
+══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold:       #f0c040;
+  --gold-dim:   #a07010;
+  --border-gold:#8b6914;
+  --text-light: #f5dfa0;
+  --text-dim:   #a08040;
+}
+
+body {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at center, #1a0c05 0%, #0a0500 100%);
+  font-family: 'Cinzel', serif;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════
+   CONTAINER
+══════════════════════════════════════════ */
+.shop-container {
+  width: 940px;
+  max-width: 98vw;
+  background: linear-gradient(160deg, #3a1e08 0%, #200e04 40%, #2e1508 100%);
+  border: 3px solid var(--border-gold);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 6px #1a0c03,
+    0 0 0 8px #5a3010,
+    0 0 60px rgba(180,100,20,0.4),
+    inset 0 0 80px rgba(0,0,0,0.6);
+  position: relative;
+}
+
+.shop-container::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 10px;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,200,80,0.015) 2px, rgba(255,200,80,0.015) 4px);
+  pointer-events: none; z-index: 0;
+}
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+.shop-header {
+  position: relative; z-index: 1;
+  text-align: center;
+  padding: 14px 20px 10px;
+  background: linear-gradient(180deg, #4a2208 0%, #2a1205 100%);
+  border-bottom: 2px solid var(--border-gold);
+  border-radius: 10px 10px 0 0;
+}
+
+.shop-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 2rem; font-weight: 700;
+  color: var(--gold); letter-spacing: 0.25em;
+  text-shadow: 0 0 20px rgba(255,200,0,0.6), 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.shop-title::before, .shop-title::after {
+  content: '⚔';
+  color: var(--gold-dim); font-size: 1.1rem;
+  margin: 0 14px; vertical-align: middle; opacity: 0.7;
+}
+
+/* ══════════════════════════════════════════
+   BODY LAYOUT
+══════════════════════════════════════════ */
+.shop-body {
+  display: flex; position: relative; z-index: 1; min-height: 400px;
+}
+
+/* ══════════════════════════════════════════
+   SKILL GRID (LEFT)
+══════════════════════════════════════════ */
+.skill-area {
+  flex: 1; padding: 16px 12px 12px 16px;
+  border-right: 2px solid var(--border-gold);
+}
+
+.skill-row { margin-bottom: 12px; }
+
+.row-label {
+  font-size: 0.68rem; color: #c8a060;
+  background: rgba(255,200,80,0.08);
+  border: 1px solid rgba(255,200,80,0.2);
+  border-radius: 4px; padding: 3px 8px;
+  margin-bottom: 8px; font-style: italic;
+  display: inline-block; letter-spacing: 0.04em;
+}
+
+.skill-icons { display: flex; gap: 10px; flex-wrap: nowrap; }
+
+/* ══════════════════════════════════════════
+   SKILL ICON
+══════════════════════════════════════════ */
+.skill-icon {
+  position: relative; width: 82px; height: 82px;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+  flex-shrink: 0;
+}
+
+.skill-icon:hover { transform: translateY(-3px) scale(1.05); }
+.skill-icon.active { transform: translateY(-2px) scale(1.07); }
+
+.icon-ring {
+  width: 82px; height: 82px;
+  border-radius: 50%; padding: 3px;
+  position: relative;
+  transition: box-shadow 0.2s ease;
+}
+
+.skill-icon.active .icon-ring {
+  box-shadow: 0 0 22px 6px var(--glow-color, #ffd700a0) !important;
+  outline: 2px solid var(--gold);
+  border-radius: 50%;
+}
+
+.skill-icon:hover .icon-ring {
+  box-shadow: 0 0 14px 4px var(--glow-color, #ffd700a0);
+}
+
+.icon-orb {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  border: 2px solid rgba(255,255,255,0.15);
+  overflow: hidden; position: relative;
+}
+
+.icon-orb::before {
+  content: '';
+  position: absolute; top: -20%; left: -20%;
+  width: 55%; height: 55%;
+  background: radial-gradient(circle, rgba(255,255,255,0.38) 0%, transparent 70%);
+  border-radius: 50%; pointer-events: none;
+}
+
+.icon-orb::after {
+  content: ''; position: absolute; inset: 0;
+  border-radius: 50%;
+  animation: orbPulse 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes orbPulse {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.35; }
+}
+
+.icon-badge {
+  position: absolute; bottom: -1px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10,5,0,0.92);
+  border: 1px solid var(--border-gold);
+  border-radius: 6px; padding: 1px 6px;
+  font-size: 0.6rem; color: var(--gold);
+  white-space: nowrap; font-weight: 700;
+  letter-spacing: 0.05em; pointer-events: none; z-index: 2;
+}
+
+.icon-badge.maxed {
+  color: #ff9020; border-color: #ff6010;
+  animation: maxedPulse 2s ease-in-out infinite;
+}
+
+@keyframes maxedPulse {
+  0%,100% { box-shadow: 0 0 4px #ff601080; }
+  50% { box-shadow: 0 0 10px #ff6010cc; }
+}
+
+/* Orb color themes */
+.orb-ice       { background: radial-gradient(circle at 38% 32%, #a0e8ff 0%, #1e8adc 42%, #0d4080 100%); }
+.orb-fire      { background: radial-gradient(circle at 38% 32%, #ffd080 0%, #e04020 42%, #600808 100%); }
+.orb-poison    { background: radial-gradient(circle at 38% 32%, #a0ffa0 0%, #20a040 42%, #0a4010 100%); }
+.orb-lightning { background: radial-gradient(circle at 38% 32%, #ffff80 0%, #e0a020 42%, #604000 100%); }
+.orb-shadow    { background: radial-gradient(circle at 38% 32%, #c080ff 0%, #600090 42%, #1a0030 100%); }
+.orb-ember     { background: radial-gradient(circle at 38% 32%, #ff9080 0%, #c02020 42%, #400000 100%); }
+.orb-beast     { background: radial-gradient(circle at 38% 32%, #80ff80 0%, #208040 42%, #003010 100%); }
+.orb-tidal     { background: radial-gradient(circle at 38% 32%, #80e8ff 0%, #1080c0 42%, #003050 100%); }
+.orb-ocean     { background: radial-gradient(circle at 38% 32%, #a0e0ff 0%, #0860a0 42%, #002040 100%); }
+.orb-blood     { background: radial-gradient(circle at 38% 32%, #ffa0a0 0%, #c01010 42%, #500000 100%); }
+.orb-frost     { background: radial-gradient(circle at 38% 32%, #e0f8ff 0%, #60c0e0 42%, #1040a0 100%); }
+.orb-potion    { background: radial-gradient(circle at 38% 32%, #80ffff 0%, #10a0c0 42%, #003040 100%); }
+.orb-dragon    { background: radial-gradient(circle at 38% 32%, #80c0ff 0%, #1050a0 42%, #001840 100%); }
+.orb-comet     { background: radial-gradient(circle at 38% 32%, #c0c0ff 0%, #6060e0 42%, #101060 100%); }
+.orb-blade     { background: radial-gradient(circle at 38% 32%, #ffd0a0 0%, #c08020 42%, #403000 100%); }
+.orb-inferno   { background: radial-gradient(circle at 38% 32%, #ffa060 0%, #e04000 42%, #500000 100%); }
+.orb-eye       { background: radial-gradient(circle at 38% 32%, #a0d0ff 0%, #2060c0 42%, #001040 100%); }
+
+/* ══════════════════════════════════════════
+   DETAIL PANEL (RIGHT)
+══════════════════════════════════════════ */
+.detail-panel {
+  width: 228px; flex-shrink: 0;
+  padding: 18px 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  background: linear-gradient(180deg, rgba(40,20,5,0.9) 0%, rgba(20,10,2,0.95) 100%);
+  min-height: 360px;
+}
+
+.detail-placeholder {
+  margin: auto; text-align: center;
+  color: var(--text-dim); font-size: 0.75rem;
+  opacity: 0.6; font-style: italic; line-height: 1.6;
+}
+
+.detail-icon-wrap {
+  display: flex; align-items: center; gap: 10px;
+}
+
+.detail-icon-circle {
+  width: 52px; height: 52px; flex-shrink: 0;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+  border: 2px solid rgba(255,255,255,0.2);
+  position: relative; overflow: hidden;
+}
+
+.detail-icon-circle::before {
+  content: '';
+  position: absolute; top: -15%; left: -15%;
+  width: 50%; height: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.detail-name {
+  font-size: 0.92rem; font-weight: 700;
+  color: var(--gold);
+  text-shadow: 0 0 10px rgba(255,200,0,0.4);
+  line-height: 1.25; flex: 1;
+}
+
+.detail-desc {
+  font-size: 0.7rem; color: #d4b880;
+  font-family: 'Cinzel', serif; line-height: 1.55;
+  border-top: 1px solid rgba(255,200,80,0.2);
+  padding-top: 8px; font-style: italic;
+}
+
+.detail-stats {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,200,80,0.2);
+  border-radius: 6px; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.stat-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.78rem;
+}
+
+.stat-label { color: #a08040; }
+.stat-value { font-weight: 700; font-size: 0.9rem; }
+.stat-current { color: #f0c040; }
+.stat-next    { color: #60ff90; }
+
+.stat-arrow {
+  color: #60ff90; font-size: 0.72rem; text-align: center; opacity: 0.8;
+}
+
+.cost-bar {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,200,80,0.25);
+  border-radius: 6px; padding: 8px 12px;
+  font-size: 0.95rem; font-weight: 700; color: var(--gold);
+}
+
+.cost-coin {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffd700, #b8860b);
+  border: 1.5px solid #8b6914;
+  box-shadow: 0 0 6px rgba(255,215,0,0.5);
+  flex-shrink: 0;
+}
+
+/* Upgrade button */
+.btn-upgrade {
+  background: linear-gradient(180deg, #c07010 0%, #804808 100%);
+  border: 2px solid #d4921c; border-radius: 6px;
+  color: #fff8e0; font-family: 'Cinzel', serif;
+  font-size: 0.88rem; font-weight: 700; letter-spacing: 0.08em;
+  padding: 10px; cursor: pointer;
+  transition: all 0.15s ease; text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+  width: 100%;
+}
+
+.btn-upgrade:hover:not(:disabled) {
+  background: linear-gradient(180deg, #d48018 0%, #905510 100%);
+  box-shadow: 0 0 18px rgba(200,140,20,0.6), 0 4px 12px rgba(0,0,0,0.5);
+  transform: translateY(-1px);
+}
+
+.btn-upgrade:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn-upgrade:disabled {
+  background: linear-gradient(180deg, #4a3020 0%, #2a1a10 100%);
+  border-color: #5a4030; color: #806040; cursor: not-allowed;
+}
+
+.btn-upgrade.btn-maxed {
+  background: linear-gradient(180deg, #402080 0%, #201040 100%);
+  border-color: #8040c0; color: #c080ff; cursor: default;
+}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+.toast {
+  position: fixed; top: 24px; left: 50%;
+  transform: translateX(-50%) translateY(-80px);
+  background: rgba(20,5,5,0.95);
+  border: 2px solid #c03020; border-radius: 8px;
+  padding: 10px 24px; color: #ff8060;
+  font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em;
+  z-index: 1000;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events: none;
+  box-shadow: 0 0 20px rgba(200,30,10,0.5);
+  white-space: nowrap;
+}
+
+.toast.success {
+  background: rgba(5,20,5,0.95); border-color: #20c050;
+  color: #60ff90; box-shadow: 0 0 20px rgba(30,200,60,0.4);
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ══════════════════════════════════════════
+   BOTTOM BAR
+══════════════════════════════════════════ */
+.shop-footer {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 18px;
+  background: linear-gradient(180deg, #2a1205 0%, #1a0a03 100%);
+  border-top: 2px solid var(--border-gold);
+  border-radius: 0 0 10px 10px;
+}
+
+.gold-display {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(0,0,0,0.5);
+  border: 2px solid #8b6914; border-radius: 8px;
+  padding: 6px 14px;
+  box-shadow: 0 0 12px rgba(255,215,0,0.2);
+}
+
+.gold-coin-big {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffe040, #c89010, #8b6914);
+  border: 2px solid #8b6914;
+  box-shadow: 0 0 10px rgba(255,215,0,0.5), inset 0 -2px 4px rgba(0,0,0,0.3);
+  flex-shrink: 0;
+  animation: coinGlow 3s ease-in-out infinite;
+}
+
+@keyframes coinGlow {
+  0%,100% { box-shadow: 0 0 10px rgba(255,215,0,0.5), inset 0 -2px 4px rgba(0,0,0,0.3); }
+  50%      { box-shadow: 0 0 22px rgba(255,215,0,0.9), inset 0 -2px 4px rgba(0,0,0,0.3); }
+}
+
+.gold-amount {
+  font-size: 1.3rem; font-weight: 900; color: var(--gold);
+  text-shadow: 0 0 10px rgba(255,200,0,0.5);
+  min-width: 80px; letter-spacing: 0.04em;
+}
+
+.gold-label {
+  font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.06em;
+}
+
+.btn-shop {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(180deg, #2a5a20 0%, #183510 100%);
+  border: 2px solid #4a8a30; border-radius: 8px;
+  color: #80ff60; font-family: 'Cinzel', serif;
+  font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em;
+  padding: 7px 16px; cursor: pointer;
+  transition: all 0.15s ease; text-decoration: none;
+}
+
+.btn-shop:hover {
+  background: linear-gradient(180deg, #3a7030 0%, #224518 100%);
+  box-shadow: 0 0 14px rgba(80,200,40,0.4);
+  transform: translateY(-1px);
+}
+
+.btn-continue {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(180deg, #c07818 0%, #804a08 100%);
+  border: 2px solid #e09020; border-radius: 8px;
+  color: #fff8e0; font-family: 'Cinzel', serif;
+  font-size: 0.88rem; font-weight: 700; letter-spacing: 0.08em;
+  padding: 8px 18px; cursor: pointer;
+  transition: all 0.15s ease;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  text-decoration: none; text-transform: uppercase;
+}
+
+.btn-continue:hover {
+  background: linear-gradient(180deg, #d08820 0%, #905810 100%);
+  box-shadow: 0 0 18px rgba(200,140,20,0.5), 0 4px 12px rgba(0,0,0,0.4);
+  transform: translateY(-1px);
+}
+
+.btn-continue .arrow {
+  font-size: 1.1rem;
+  animation: arrowBounce 1.5s ease-in-out infinite;
+}
+
+@keyframes arrowBounce {
+  0%,100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+
+/* ══════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════ */
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  15% { transform: translateX(-6px); }
+  30% { transform: translateX(6px); }
+  45% { transform: translateX(-4px); }
+  60% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+  90% { transform: translateX(2px); }
+}
+.shake { animation: shake 0.48s ease; }
+
+@keyframes levelUpBurst {
+  0%   { transform: scale(1); filter: brightness(1); }
+  40%  { transform: scale(1.18); filter: brightness(1.6); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+.level-up-burst { animation: levelUpBurst 0.55s ease-out; }
+
+/* ══════════════════════════════════════════
+   SCROLLBAR
+══════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #1a0a03; }
+::-webkit-scrollbar-thumb { background: #5a3010; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="shop-container">
+
+  <!-- Header -->
+  <div class="shop-header">
+    <h1 class="shop-title">Skill</h1>
+  </div>
+
+  <!-- Body -->
+  <div class="shop-body">
+    <div class="skill-area" id="skillArea"></div>
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-placeholder">⚔ Select a skill<br>to view upgrade details</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="shop-footer">
+    <div class="gold-display">
+      <div class="gold-coin-big"></div>
+      <div>
+        <div class="gold-amount" id="goldDisplay">0</div>
+        <div class="gold-label">Gold</div>
+      </div>
+    </div>
+
+    <!-- Save status indicator -->
+    <div id="saveStatus" style="
+      font-size:0.72rem; color:#60ff90; font-family:'Cinzel',serif;
+      opacity:0; transition:opacity 0.4s ease; white-space:nowrap;
+    "></div>
+
+    <button class="btn-continue" onclick="showToast('Tiến hành trò chơi…','success')">
+      Tiếp tục <span class="arrow">➤</span>
+    </button>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+/* ─────────────────────────────────────────
+   UPGRADE DEFINITIONS — 18 skills, 3 rows
+───────────────────────────────────────── */
+const UPGRADES = [
+  // Row 0 — Attack
+  { id:'ice_mastery',   row:0, name:'Ice Mastery',    desc:'Increases Ice Dragon freeze chance and slow duration per level.',              icon:'❄',  orb:'orb-ice',       glow:'#4dc8ff', stat:'Slow Duration', base:2.0,  step:0.15, unit:'s',  max:15, costBase:300, costScale:1.40 },
+  { id:'dragon_fury',   row:0, name:'Dragon Fury',    desc:'Boosts Fire Dragon raw attack damage each upgrade level.',                     icon:'🐉', orb:'orb-fire',      glow:'#ff6020', stat:'Fire DMG Bonus', base:0,    step:8,    unit:'',   max:4,  costBase:500, costScale:1.80 },
+  { id:'storm_call',    row:0, name:'Storm Call',     desc:'Summons crackling energy to increase all tower attack rate.',                  icon:'⚡', orb:'orb-lightning', glow:'#ffd700', stat:'Attack Rate',    base:0,    step:5,    unit:'%',  max:15, costBase:350, costScale:1.45 },
+  { id:'inferno_core',  row:0, name:'Inferno Core',   desc:'Intensifies the molten core, increasing Fire Dragon AoE radius.',             icon:'🔥', orb:'orb-ember',     glow:'#ff2020', stat:'AoE Radius',     base:52,   step:6,    unit:'px', max:20, costBase:400, costScale:1.35 },
+  { id:'nature_toxin',  row:0, name:'Nature Toxin',   desc:'Enhances poison potency, increasing DoT damage per tick.',                    icon:'☘',  orb:'orb-poison',    glow:'#40ff60', stat:'DoT per Tick',   base:5,    step:3,    unit:'',   max:15, costBase:320, costScale:1.40 },
+  { id:'shadow_flame',  row:0, name:'Shadow Flame',   desc:'Dark energy boosts burn damage of all fire-type tower attacks.',              icon:'🌑', orb:'orb-shadow',    glow:'#9020ff', stat:'Burn Damage',    base:7,    step:5,    unit:'',   max:10, costBase:600, costScale:1.60 },
+  // Row 1 — Defense/Support
+  { id:'flame_aura',    row:1, name:'Flame Aura',     desc:'Protective fire aura reduces damage taken by the Dragon Nest.',               icon:'🔴', orb:'orb-ember',     glow:'#ff2020', stat:'Nest Armor',     base:0,    step:3,    unit:'%',  max:15, costBase:280, costScale:1.40 },
+  { id:'beast_hide',    row:1, name:'Beast Hide',     desc:'Thickens Dragon Nest walls, raising maximum egg capacity.',                   icon:'🦎', orb:'orb-beast',     glow:'#20ff60', stat:'Max Eggs',       base:5,    step:1,    unit:'',   max:4,  costBase:800, costScale:2.00 },
+  { id:'vine_ward',     row:1, name:'Vine Ward',      desc:'Magical vines slow enemies approaching the nest each level.',                 icon:'🌿', orb:'orb-tidal',     glow:'#20c0ff', stat:'Entry Slow',     base:0,    step:4,    unit:'%',  max:3,  costBase:700, costScale:2.20 },
+  { id:'tidal_guard',   row:1, name:'Tidal Guard',    desc:'Tidal barrier increases Ice Dragon attack range each level.',                 icon:'🌊', orb:'orb-ocean',     glow:'#10a0e0', stat:'Ice Range',      base:240,  step:12,   unit:'px', max:15, costBase:350, costScale:1.45 },
+  { id:'blood_feast',   row:1, name:'Blood Feast',    desc:'Increases gold earned per enemy kill by a flat bonus amount.',                icon:'🍖', orb:'orb-blood',     glow:'#ff1010', stat:'Gold per Kill',  base:0,    step:4,    unit:'g',  max:10, costBase:500, costScale:1.55 },
+  { id:'mana_flow',     row:1, name:'Mana Flow',      desc:'Improves mana regeneration rate for casting more spells rapidly.',            icon:'💧', orb:'orb-frost',     glow:'#80d0ff', stat:'Mana Regen',     base:6,    step:1,    unit:'/s', max:10, costBase:450, costScale:1.50 },
+  // Row 2 — Economy/Special
+  { id:'gold_rush',     row:2, name:'Gold Rush',      desc:'Increases starting gold at the beginning of each new level.',                 icon:'💰', orb:'orb-potion',    glow:'#20e0ff', stat:'Starting Gold',  base:500,  step:50,   unit:'g',  max:15, costBase:400, costScale:1.40 },
+  { id:'dragon_scale',  row:2, name:'Dragon Scale',   desc:'Reinforced dragon scales extend attack range for all tower types.',           icon:'🐲', orb:'orb-dragon',    glow:'#4080ff', stat:'Range Bonus',    base:0,    step:4,    unit:'%',  max:4,  costBase:600, costScale:1.90 },
+  { id:'comet_slash',   row:2, name:'Comet Slash',    desc:'Comet energy grants towers a chance to deal critical strike damage.',         icon:'✨', orb:'orb-comet',     glow:'#8080ff', stat:'Crit Chance',    base:0,    step:2,    unit:'%',  max:1,  costBase:999, costScale:3.00 },
+  { id:'spirit_blade',  row:2, name:'Spirit Blade',   desc:'Spirit energy amplifies the critical hit damage multiplier.',                 icon:'🗡', orb:'orb-blade',     glow:'#e0a020', stat:'Crit Multiplier',base:2.0,  step:0.2,  unit:'x',  max:35, costBase:250, costScale:1.30 },
+  { id:'inferno_ring',  row:2, name:'Inferno Ring',   desc:'Flaming ring expands Fire Aura nova explosion radius at high levels.',        icon:'🔥', orb:'orb-inferno',   glow:'#ff4000', stat:'Nova Radius',    base:200,  step:10,   unit:'px', max:10, costBase:500, costScale:1.55 },
+  { id:'dragon_eye',    row:2, name:'Dragon Eye',     desc:'All-seeing dragon eye grants extra gold rewards from each enemy wave.',        icon:'👁', orb:'orb-eye',       glow:'#4090ff', stat:'Wave Gold Bonus',base:0,    step:10,   unit:'g',  max:10, costBase:550, costScale:1.50 },
+];
+
+const ROW_LABELS = [
+  '⚔ Upgrading any skill in this row increases Attack Power',
+  '🛡 Upgrading any skill in this row increases Defense & Support',
+  '💰 Upgrading any skill in this row increases Economy & Special Abilities',
+];
+
+/* ─────────────────────────────────────────
+   STATE — load from localStorage + shop_state.json
+───────────────────────────────────────── */
+const SK = 'ld_shrine_shop_v2';
+let state;
+try { state = JSON.parse(localStorage.getItem(SK)) || null; } catch(e) { state = null; }
+if (!state) state = { gold: 106200, levels: {} };
+UPGRADES.forEach(u => { if (state.levels[u.id] == null) state.levels[u.id] = 0; });
+
+// Try to merge from shop_state.json (written by Python save-server)
+(async () => {
+  try {
+    const r = await fetch('shop_state.json?_=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) {
+      const data = await r.json();
+      if (data && data.levels) {
+        Object.keys(data.levels).forEach(id => {
+          if ((data.levels[id] || 0) > (state.levels[id] || 0))
+            state.levels[id] = data.levels[id];
+        });
+        if ((data.gold || 0) > state.gold) state.gold = data.gold;
+        localStorage.setItem(SK, JSON.stringify(state));
+      }
+    }
+  } catch(e) { /* offline — localStorage only */ }
+  renderAll();
+  setTimeout(() => selectSkill('ice_mastery'), 150);
+})();
+
+// ── Save to localStorage AND shop_state.json via Python save-server ──────────────
+const SAVE_URL = 'http://127.0.0.1:55234/save';
+
+let _saveTimer;
+function flashSaveStatus(msg) {
+  const el = document.getElementById('saveStatus');
+  if (!el) return;
+  el.textContent = msg; el.style.opacity = '1';
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => { el.style.opacity = '0'; }, 2000);
+}
+
+async function save() {
+  try { localStorage.setItem(SK, JSON.stringify(state)); } catch(e) {}
+  try {
+    await fetch(SAVE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state),
+    });
+    flashSaveStatus('✔ Saved');
+  } catch(e) {
+    flashSaveStatus('💾 Saved locally');
+  }
+}
+
+
+/* ─────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────── */
+function lv(u)    { return state.levels[u.id]; }
+function maxed(u) { return lv(u) >= u.max; }
+function cost(u)  { return Math.round(u.costBase * Math.pow(u.costScale, lv(u))); }
+
+function fmtStat(u, level) {
+  const v = u.base + level * u.step;
+  return (Number.isInteger(v) ? v : v.toFixed(1)) + u.unit;
+}
+
+/* ─────────────────────────────────────────
+   TOAST
+───────────────────────────────────────── */
+let _toastTimer;
+function showToast(msg, type='error') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + type;
+  void el.offsetHeight;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 2300);
+}
+
+/* ─────────────────────────────────────────
+   SELECTION
+───────────────────────────────────────── */
+let selectedId = null;
+
+/* ─────────────────────────────────────────
+   RENDER GRID
+───────────────────────────────────────── */
+function renderGrid() {
+  const rows = [[], [], []];
+  UPGRADES.forEach(u => rows[u.row].push(u));
+
+  document.getElementById('skillArea').innerHTML = rows.map((items, ri) => `
+    <div class="skill-row">
+      <div class="row-label">${ROW_LABELS[ri]}</div>
+      <div class="skill-icons">
+        ${items.map(u => {
+          const level = lv(u);
+          const mx = maxed(u);
+          const sel = selectedId === u.id;
+          return `
+            <div class="skill-icon${sel?' active':''}${mx?' maxed-out':''}"
+                 id="icon_${u.id}" data-id="${u.id}"
+                 title="${u.name}"
+                 style="--glow-color:${u.glow}80"
+                 onclick="selectSkill('${u.id}')">
+              <div class="icon-ring">
+                <div class="icon-orb ${u.orb}">
+                  <span style="position:relative;z-index:1;filter:drop-shadow(0 0 4px rgba(255,255,255,0.55))">${u.icon}</span>
+                </div>
+              </div>
+              <div class="icon-badge${mx?' maxed':''}">${level}/${u.max}</div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ─────────────────────────────────────────
+   RENDER DETAIL
+───────────────────────────────────────── */
+function renderDetail(u) {
+  const level = lv(u);
+  const mx = maxed(u);
+  const c = cost(u);
+  const canAfford = state.gold >= c;
+  const curStat  = fmtStat(u, level);
+  const nextStat = mx ? '—' : fmtStat(u, level + 1);
+
+  document.getElementById('detailPanel').innerHTML = `
+    <div class="detail-icon-wrap">
+      <div class="detail-icon-circle ${u.orb}">
+        <span style="position:relative;z-index:1;">${u.icon}</span>
+      </div>
+      <div class="detail-name">${u.name}</div>
+    </div>
+
+    <div class="detail-desc">${u.desc}</div>
+
+    <div class="detail-stats">
+      <div class="stat-row">
+        <span class="stat-label">Current:</span>
+        <span class="stat-value stat-current">${curStat}</span>
+      </div>
+      ${mx
+        ? `<div class="stat-arrow" style="color:#ff9020">★ MAX LEVEL REACHED ★</div>`
+        : `<div class="stat-arrow">▼</div>
+           <div class="stat-row">
+             <span class="stat-label">Next:</span>
+             <span class="stat-value stat-next">${nextStat}</span>
+           </div>`}
+    </div>
+
+    ${mx ? `
+      <button class="btn-upgrade btn-maxed" disabled>✦ MAXED OUT ✦</button>
+    ` : `
+      <div class="cost-bar">
+        <div class="cost-coin"></div>
+        <span>${c.toLocaleString()}</span>
+      </div>
+      <button class="btn-upgrade" id="btnUpg"
+              onclick="doUpgrade('${u.id}')"
+              ${canAfford?'':'disabled style="opacity:0.55"'}>
+        UPGRADE
+      </button>
+    `}
+  `;
+}
+
+/* ─────────────────────────────────────────
+   RENDER GOLD
+───────────────────────────────────────── */
+function renderGold() {
+  document.getElementById('goldDisplay').textContent = state.gold.toLocaleString();
+}
+
+function renderAll() {
+  renderGrid();
+  renderGold();
+  if (selectedId) {
+    const u = UPGRADES.find(x => x.id === selectedId);
+    if (u) renderDetail(u);
+  }
+}
+
+/* ─────────────────────────────────────────
+   INTERACTIONS
+───────────────────────────────────────── */
+function selectSkill(id) {
+  selectedId = id;
+  renderGrid();
+  const u = UPGRADES.find(x => x.id === id);
+  if (u) renderDetail(u);
+}
+
+function doUpgrade(id) {
+  const u = UPGRADES.find(x => x.id === id);
+  if (!u || maxed(u)) return;
+
+  const c = cost(u);
+  if (state.gold < c) {
+    showToast(`Not enough Gold! Need ${c.toLocaleString()}g`, 'error');
+    // Shake gold
+    const el = document.getElementById('goldDisplay');
+    el.classList.remove('shake');
+    void el.offsetHeight;
+    el.classList.add('shake');
+    el.addEventListener('animationend', () => el.classList.remove('shake'), { once:true });
+    return;
+  }
+
+  state.gold -= c;
+  state.levels[id]++;
+  save();
+
+  // Burst animation on icon
+  const iconEl = document.getElementById('icon_' + id);
+  if (iconEl) {
+    iconEl.classList.add('level-up-burst');
+    iconEl.addEventListener('animationend', () => iconEl.classList.remove('level-up-burst'), { once:true });
+  }
+
+  const newLv = state.levels[id];
+  const nm = newLv >= u.max;
+  showToast(nm ? `${u.name} maxed out! ✦` : `${u.name} upgraded to Lv ${newLv}!`, 'success');
+
+  renderAll();
+}
+
+/* ─────────────────────────────────────────
+   KEYBOARD
+───────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    selectedId = null;
+    renderGrid();
+    document.getElementById('detailPanel').innerHTML =
+      '<div class="detail-placeholder">⚔ Select a skill<br>to view upgrade details</div>';
+  }
+});
+
+/* ─────────────────────────────────────────
+   INIT
+───────────────────────────────────────── */
+// Note: renderAll() and selectSkill() are called inside the async loader above.
+// Fallback in case async hasn't fired yet:
+if (document.getElementById('goldDisplay').textContent === '0') {
+  renderAll();
+  setTimeout(() => selectSkill('ice_mastery'), 150);
+}
+</script>
+</body>
+</html>

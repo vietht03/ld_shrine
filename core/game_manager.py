@@ -5,6 +5,20 @@ from core.enemy import Enemy, DroppedEgg
 from core.tower import DragonTower, FireDragon, IceDragon, PoisonDragon
 from core.projectile import Projectile
 from core.wave_spawner import WaveSpawner, WaveConfig
+try:
+    from core.upgrade_manager import UpgradeManager
+except Exception:
+    class UpgradeManager:  # type: ignore
+        @staticmethod
+        def reload(): pass
+        @staticmethod
+        def starting_gold(): return 500
+        @staticmethod
+        def gold_per_kill_bonus(): return 0
+        @staticmethod
+        def wave_gold_bonus(): return 0
+        @staticmethod
+        def mana_regen_bonus(): return 0.0
 
 
 class GameManager:
@@ -50,10 +64,14 @@ class GameManager:
         self.nest_pos = waypoints[-1] if waypoints else Vec2(0.0, 0.0)
         self.spawn_pos = waypoints[0] if waypoints else Vec2(0.0, 0.0)
 
+        # Reload upgrade bonuses each level start
+        UpgradeManager.reload()
+
         # Resources
         self.player_eggs: int = starting_eggs
         self.nest_eggs: int = starting_eggs
-        self.gold: int = starting_gold
+        # Apply Gold Rush upgrade bonus on top of level starting_gold
+        self.gold: int = starting_gold + max(0, UpgradeManager.starting_gold() - 500)
         self.ruby: int = starting_ruby
         self.score: int = 0
 
@@ -292,9 +310,11 @@ class GameManager:
         # 5. Process enemy deaths
         for enemy in self.enemies[:]:
             if not enemy.is_alive and not enemy.has_escaped:
-                self.gold += enemy.gold_reward
-                self.score += enemy.gold_reward * 10
-                self.log(f"ENEMY SLAIN: {enemy.name} | +{enemy.gold_reward} gold")
+                kill_gold = enemy.gold_reward + UpgradeManager.gold_per_kill_bonus()
+                self.gold += kill_gold
+                self.score += kill_gold * 10
+                self.log(f"ENEMY SLAIN: {enemy.name} | +{kill_gold} gold")
+
 
                 # Ruby drop: 20% chance per kill
                 import random

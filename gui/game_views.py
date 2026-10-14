@@ -1,11 +1,24 @@
 from __future__ import annotations
 import arcade
 import math
+import os
 from typing import Optional, List, Dict, Tuple
 from core.vec2 import Vec2
 from core.game_manager import GameManager
 from core.tower import FireDragon, IceDragon, PoisonDragon, DragonTower
 from core.level_data import LevelConfig, ProgressManager, get_level_data
+try:
+    from core.upgrade_manager import UpgradeManager
+except Exception:
+    class UpgradeManager:  # type: ignore
+        @staticmethod
+        def reload(): pass
+        @staticmethod
+        def starting_gold(): return 500
+        @staticmethod
+        def gold_per_kill_bonus(): return 0
+        @staticmethod
+        def wave_gold_bonus(): return 0
 
 SCREEN_WIDTH  = 1000
 SCREEN_HEIGHT = 700
@@ -93,24 +106,29 @@ class MainMenuView(arcade.View):
 
         # Buttons
         for label, by, base_c, hover_c in [
-            ("CHƠI GAME",     cy-55, (160,20,20), (220,60,30)),
-            ("THOÁT",         cy-115, (40,40,50),  (80,80,90)),
+            ("CHƠI GAME",     cy-40,  (160,20,20), (220,60,30)),
+            ("🎯 KỸ NĂNG",   cy-95,  (30,80,150), (50,120,210)),
+            ("THOÁT",         cy-150, (40,40,50),  (80,80,90)),
         ]:
             rect = arcade.XYWH(cx, by, 220, 48)
             hovered = self.mouse_pos.to_tuple() in rect
             arcade.draw_rect_filled(rect, hover_c if hovered else base_c)
             arcade.draw_rect_outline(rect, (220,180,30) if hovered else (100,80,20), 2)
-            arcade.draw_text(label, cx-55, by-8, (255,255,255), 15, bold=True)
+            arcade.draw_text(label, cx-62, by-8, (255,255,255), 14, bold=True)
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_pos = Vec2(x, y)
 
     def on_mouse_press(self, x, y, button, modifiers):
+        from gui.skill_shop_view import SkillShopView
         cx = SCREEN_WIDTH / 2
         cy = SCREEN_HEIGHT / 2
-        if (x,y) in arcade.XYWH(cx, cy-55, 220, 48):
+        if (x,y) in arcade.XYWH(cx, cy-40, 220, 48):
             self.window.show_view(LevelSelectView())
-        elif (x,y) in arcade.XYWH(cx, cy-115, 220, 48):
+        elif (x,y) in arcade.XYWH(cx, cy-95, 220, 48):
+            UpgradeManager.reload()
+            self.window.show_view(SkillShopView(self, 106_200))
+        elif (x,y) in arcade.XYWH(cx, cy-150, 220, 48):
             arcade.exit()
 
 
@@ -241,6 +259,39 @@ class GameplayView(arcade.View):
 
         # Shop scroll offset (future use)
         self.anim_t: float = 0.0
+
+        # Dragon + Enemy sprite textures
+        self._tower_tex: Dict[type, Optional[arcade.Texture]] = {}
+        self._enemy_tex: Dict[str, Optional[arcade.Texture]] = {}
+        self._load_sprites()
+
+    def _load_sprites(self) -> None:
+        """Load dragon and enemy textures from assets/sprites/."""
+        base = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "sprites")
+        # Dragon towers
+        for cls, fname in [(FireDragon, "fire_dragon.png"),
+                           (IceDragon, "ice_dragon.png"),
+                           (PoisonDragon, "poison_dragon.png")]:
+            path = os.path.join(base, fname)
+            try:
+                self._tower_tex[cls] = arcade.load_texture(path) if os.path.exists(path) else None
+            except Exception:
+                self._tower_tex[cls] = None
+        # Enemy sheet: cut 3x2 grid, each cell ~341px (1024/3)
+        sheet_path = os.path.join(base, "enemy_sheet.png")
+        if os.path.exists(sheet_path):
+            try:
+                CW, CH = 341, 512  # cell size in sheet
+                names = ["Peasant", "Thief", "Footman",
+                         "Armored Knight", "Shadow Mage", "Boss"]
+                for idx, name in enumerate(names):
+                    r, c = divmod(idx, 3)
+                    self._enemy_tex[name] = arcade.load_texture(
+                        sheet_path,
+                        x=c * CW, y=r * CH, width=CW, height=CH
+                    )
+            except Exception:
+                pass
 
     # ──────────────────────────────────────────────────────────────────
     # UPDATE
@@ -381,66 +432,104 @@ class GameplayView(arcade.View):
             body, glow, lbl = meta["body"], meta["glow"], meta["label"]
             tx, ty = tower.pos.x, self._world_y(tower.pos.y)
 
-            # Glow ring pulsed
             pulse = 0.7 + 0.3 * math.sin(self.anim_t * 2.5)
             gr, gg, gb, ga = glow
-            arcade.draw_circle_filled(tx, ty, 24, (gr, gg, gb, int(ga*pulse)))
-            arcade.draw_circle_filled(tx, ty, 18, body)
-            arcade.draw_circle_outline(tx, ty, 18, (255,255,255), 2)
-            arcade.draw_text(lbl, tx-7, ty-8, (20,20,20), 13, bold=True)
 
-            # Level badge
+            tex = self._tower_tex.get(type(tower))
+            if tex:
+                # Draw glowing aura ring below sprite
+                arcade.draw_circle_filled(tx, ty, 28, (gr, gg, gb, int(ga * pulse)))
+                # Draw sprite
+                arcade.draw_texture_rect(
+                    tex,
+                    arcade.XYWH(tx, ty, 56, 56)
+                )
+            else:
+                # Fallback: colored circle
+                arcade.draw_circle_filled(tx, ty, 24, (gr, gg, gb, int(ga*pulse)))
+                arcade.draw_circle_filled(tx, ty, 18, body)
+                arcade.draw_circle_outline(tx, ty, 18, (255,255,255), 2)
+                arcade.draw_text(lbl, tx-7, ty-8, (20,20,20), 13, bold=True)
+
+            # Level badge (always shown)
             lvl_colors = [
-                (200, 180, 30),
-                (100, 180, 255),
-                (255, 80, 80),
-                (180, 110, 255),
-                (100, 220, 120),
-                (255, 165, 80),
+                (200, 180, 30), (100, 180, 255), (255, 80, 80),
+                (180, 110, 255), (100, 220, 120), (255, 165, 80),
             ]
             lc = lvl_colors[min(tower.level - 1, len(lvl_colors) - 1)]
-            arcade.draw_circle_filled(tx + 15, ty + 15, 9, lc)
-            arcade.draw_text(str(tower.level), tx + 11, ty + 9, (20, 20, 20), 9, bold=True)
+            arcade.draw_circle_filled(tx + 22, ty + 22, 10, (20,20,20,200))
+            arcade.draw_circle_filled(tx + 22, ty + 22, 9, lc)
+            arcade.draw_text(str(tower.level), tx + 17, ty + 16, (20, 20, 20), 9, bold=True)
 
-            # Lv3 special ability indicator
-            if tower.level == 3:
-                arcade.draw_circle_outline(tx, ty, 20, (255,220,30), 2)
+            # Max-level special ring
+            if tower.level >= 6:
+                ring_a = int(120 + 80 * abs(math.sin(self.anim_t * 3)))
+                arcade.draw_circle_outline(tx, ty, 30, (255, 200, 0, ring_a), 2)
 
     # ──────────────────────────────────────────────────────────────────
     # ENEMIES / PROJECTILES / EGGS
     # ──────────────────────────────────────────────────────────────────
+    _ENEMY_COLORS: Dict[str, tuple] = {
+        "Peasant":        (180, 120, 60),
+        "Thief":          (80,  80,  140),
+        "Footman":        (120, 120, 140),
+        "Armored Knight": (140, 140, 180),
+        "Mage":           (160, 60,  200),
+        "Shadow Mage":    (100, 30,  160),
+        "Boss":           (200, 20,  20),
+    }
+
     def _draw_enemies(self) -> None:
         for e in self.game.enemies:
             if not e.is_alive:
                 continue
             ey = self._world_y(e.pos.y)
-            body_c = (200,30,30) if not e.follower.is_returning else (150,30,160)
+            is_boss = "Boss" in e.name or e.max_hp >= 5000
+            sz = 42 if is_boss else 30
 
-            # Frozen? draw icy shell
+            # Frozen shell
             if e.status_manager.is_frozen:
-                arcade.draw_circle_filled(e.pos.x, ey, 17, (160,220,255,180))
+                arcade.draw_circle_filled(e.pos.x, ey, sz // 2 + 5, (160, 220, 255, 160))
 
-            arcade.draw_circle_filled(e.pos.x, ey, 14, body_c)
-            arcade.draw_circle_outline(e.pos.x, ey, 14, (255,255,255), 1.5)
+            # Try loaded sprite texture
+            tex = self._enemy_tex.get(e.name)
+            if tex:
+                arcade.draw_texture_rect(tex, arcade.XYWH(e.pos.x, ey, sz, sz))
+            else:
+                fall_c = self._ENEMY_COLORS.get(e.name, (180, 50, 50))
+                if e.follower.is_returning:
+                    fall_c = (150, 30, 160)
+                arcade.draw_circle_filled(e.pos.x, ey, sz // 2, fall_c)
+                arcade.draw_circle_outline(e.pos.x, ey, sz // 2, (255, 255, 255), 1.5)
+                arcade.draw_text(e.name[0], e.pos.x - 5, ey - 8, (255, 255, 255), 11, bold=True)
 
+            # Stolen egg icon (above head)
             if e.has_egg:
-                arcade.draw_ellipse_filled(e.pos.x, ey-5, 8, 12, (255,220,30))
+                egg_y = ey + sz // 2 + 5
+                arcade.draw_ellipse_filled(e.pos.x, egg_y, 9, 13, (255, 220, 30))
+                arcade.draw_ellipse_outline(e.pos.x, egg_y, 9, 13, (200, 160, 0), 1.5)
+
+            # Boss crown
+            if is_boss:
+                arcade.draw_text("👑", e.pos.x - 10, ey + sz // 2 + 2, (255, 200, 0), 13)
 
             # HP bar
             hp_r = e.hp / e.max_hp
-            bw = 30
-            arcade.draw_rect_filled(arcade.XYWH(e.pos.x, ey+22, bw, 5), (40,40,40))
-            hp_color = (30,200,40) if hp_r > 0.5 else ((255,180,0) if hp_r > 0.25 else (220,40,40))
+            bw = 50 if is_boss else 34
+            bar_y = ey + sz // 2 + 10
+            arcade.draw_rect_filled(arcade.XYWH(e.pos.x, bar_y, bw, 5), (40, 40, 40))
+            hp_color = (30, 200, 40) if hp_r > 0.5 else ((255, 180, 0) if hp_r > 0.25 else (220, 40, 40))
             arcade.draw_rect_filled(
-                arcade.XYWH(e.pos.x - (bw*(1-hp_r))/2, ey+22, bw*hp_r, 4),
+                arcade.XYWH(e.pos.x - (bw * (1 - hp_r)) / 2, bar_y, bw * hp_r, 4),
                 hp_color
             )
 
-            # Status icons
+            # Status dot indicators
+            dot_y = bar_y + 9
             if e.status_manager.is_slowed:
-                arcade.draw_circle_filled(e.pos.x-11, ey+30, 4, (60,200,240))
+                arcade.draw_circle_filled(e.pos.x - 8, dot_y, 4, (60, 200, 240))
             if e.status_manager.is_poisoned:
-                arcade.draw_circle_filled(e.pos.x+11, ey+30, 4, (100,220,60))
+                arcade.draw_circle_filled(e.pos.x + 8, dot_y, 4, (100, 220, 60))
 
     def _draw_projectiles(self) -> None:
         for proj in self.game.projectiles:
@@ -746,24 +835,25 @@ class GameplayView(arcade.View):
     def _draw_victory_modal(self) -> None:
         ProgressManager.unlock_next_level(self.level_id, self.game.score)
         cx, cy = SCREEN_WIDTH/2, SCREEN_HEIGHT/2
-        arcade.draw_rect_filled(arcade.XYWH(cx,cy,400,300), (0,0,0,240))
-        arcade.draw_rect_outline(arcade.XYWH(cx,cy,400,300), (200,160,30), 3.5)
-        arcade.draw_text("🏆 CHIẾN THẮNG!", cx-110, cy+100, (220,180,30), 28, bold=True)
-        arcade.draw_text("Trứng rồng đã được bảo vệ thành công!", cx-145, cy+65, (255,255,255), 12)
-        arcade.draw_text(f"Score: {self.game.score}", cx-55, cy+35, (255,220,50), 14, bold=True)
-        arcade.draw_text(f"Gold: {self.game.gold}    Ruby: {self.game.ruby}", cx-80, cy+10, (200,180,30), 11)
+        arcade.draw_rect_filled(arcade.XYWH(cx,cy,420,320), (0,0,0,240))
+        arcade.draw_rect_outline(arcade.XYWH(cx,cy,420,320), (200,160,30), 3.5)
+        arcade.draw_text("🏆 CHIẾN THẮNG!", cx-110, cy+118, (220,180,30), 28, bold=True)
+        arcade.draw_text("Trứng rồng đã được bảo vệ thành công!", cx-145, cy+83, (255,255,255), 12)
+        arcade.draw_text(f"Score: {self.game.score}", cx-55, cy+53, (255,220,50), 14, bold=True)
+        arcade.draw_text(f"Gold: {self.game.gold}    Ruby: {self.game.ruby}", cx-80, cy+28, (200,180,30), 11)
 
         btns = []
         if self.level_id < 10:
-            btns.append(("→ MÀN SAU", cy-35, (30,130,50)))
-        btns.append(("☰ CHỌN MÀN", cy-80, (140,20,20)))
+            btns.append(("→ MÀN SAU",    cy-5,   (30,130,50)))
+        btns.append(("🎯 KỸ NĂNG",       cy-52,  (30,80,150)))
+        btns.append(("☰ CHỌN MÀN",       cy-99,  (140,20,20)))
 
         for label, by, c in btns:
-            rect = arcade.XYWH(cx, by, 220, 38)
+            rect = arcade.XYWH(cx, by, 240, 38)
             hov  = self.mouse_pos.to_tuple() in rect
             arcade.draw_rect_filled(rect, c if hov else (35,38,48))
             arcade.draw_rect_outline(rect, c, 2)
-            arcade.draw_text(label, cx-60, by-7, (255,255,255), 12, bold=True)
+            arcade.draw_text(label, cx-68, by-7, (255,255,255), 12, bold=True)
 
     def _draw_game_over_modal(self) -> None:
         cx, cy = SCREEN_WIDTH/2, SCREEN_HEIGHT/2
@@ -851,9 +941,14 @@ class GameplayView(arcade.View):
             return
 
         if self.game.is_victory:
-            if self.level_id < 10 and (x,y) in arcade.XYWH(cx, cy-35, 220, 38):
+            if self.level_id < 10 and (x,y) in arcade.XYWH(cx, cy-5, 240, 38):
+                UpgradeManager.reload()
                 self.window.show_view(GameplayView(self.level_id+1))
-            elif (x,y) in arcade.XYWH(cx, cy-80, 220, 38):
+            elif (x,y) in arcade.XYWH(cx, cy-52, 240, 38):
+                from gui.skill_shop_view import SkillShopView
+                UpgradeManager.reload()
+                self.window.show_view(SkillShopView(self, self.game.gold))
+            elif (x,y) in arcade.XYWH(cx, cy-99, 240, 38):
                 self.window.show_view(LevelSelectView())
             return
 
